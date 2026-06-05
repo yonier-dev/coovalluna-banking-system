@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block contenido %}
+<style>
+    body { background: #f4f7fb; }
+    .header {
+        background: linear-gradient(90deg, #004c99, #007acc);
+        color: #fff;
+        padding: 20px;
+        text-align: center;
+        font-size: 22px;
+        font-weight: bold;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    .container {
+        padding: 40px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 25px;
+    }
+    .action-btn {
+        background: #fff;
+        border: 2px solid #004c99;
+        border-radius: 12px;
+        padding: 30px;
+        text-align: center;
+        font-size: 16px;
+        font-weight: bold;
+        color: #004c99;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        text-decoration: none;
+        display: block;
+    }
+    .action-btn:hover {
+        background: #004c99;
+        color: #fff;
+        transform: scale(1.05);
+        box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+    }
+    .icon { font-size: 40px; margin-bottom: 15px; display: block; }
+    .logout { position: absolute; top: 20px; right: 30px; color: #fff; text-decoration: none; font-size: 14px; }
+</style>
+
+<div class="header">
+    Panel Principal – Asociado
+    <a href="/logout" class="logout">Cerrar sesión</a>
+</div>
+
+<div class="container">
+    <a href="/asociado/datos-personales" class="action-btn">
+        <span class="icon">👤</span>Datos Personales
+    </a>
+    <a href="/asociado/beneficiarios" class="action-btn">
+        <span class="icon">👪</span>Beneficiarios
+    </a>
+    <a href="/asociado/cuentas" class="action-btn">
+        <span class="icon">💳</span>Cuentas de Ahorro
+    </a>
+    <a href="/asociado/creditos" class="action-btn">
+        <span class="icon">📄</span>Créditos Activos
+    </a>
+    <a href="/asociado/descargas" class="action-btn">
+        <span class="icon">📥</span>Descarga de Extractos
+    </a>
+    <a href="/asociado/actualizar-datos" class="action-btn">
+        <span class="icon">📞</span>Actualizar Datos
+    </a>
+</div>
+{% endblock %}

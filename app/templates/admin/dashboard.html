@@ -1,0 +1,5 @@
+{% extends "base.html" %}
+{% block contenido %}
+    <h2>Bienvenido {{ session['usuario'] }} — perfil: {{ session['perfil'] }}</h2>
+    <a href="/logout">Cerrar sesión</a>
+{% endblock %}
