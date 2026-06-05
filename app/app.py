@@ -5,6 +5,7 @@ from routes.asesor import asesor_bp
 from routes.asociado import asociado_bp
 
 app = Flask(__name__) # iniciamos la instancia
+app.secret_key = 'coovalluna2026'
 
 # usamos register_blueprint para conectar un modulo con la aplixaion principal
 app.register_blueprint(auth_bp) 

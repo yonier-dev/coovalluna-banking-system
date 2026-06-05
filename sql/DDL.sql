@@ -33,18 +33,12 @@ create table ASOCIADO (
   	Municipio VARCHAR(100) NULL,
   	correo VARCHAR(100) NULL,
   	Direccion VARCHAR(150) NULL,
+	password VARCHAR(255) NULL,
+    intentos_fallidos INTEGER DEFAULT 0,
+    bloqueado BOOLEAN DEFAULT FALSE,
   	PRIMARY KEY (cedula_pk)
 );
 
-CREATE TABLE USUARIO (
-    id_usuario_pk SERIAL PRIMARY KEY,
-    cedula_fk VARCHAR(20) NOT NULL,
-    username VARCHAR(50) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
-    perfil VARCHAR(20) NOT NULL,
-    intentos_fallidos INTEGER DEFAULT 0,
-    bloqueado BOOLEAN DEFAULT FALSE
-);
 --  tablas que son dependientes
 
 create table EMPLEADO (
@@ -58,6 +52,9 @@ create table EMPLEADO (
   	Fecha_Ingreso TIMESTAMP NULL,
   	Salario_base FLOAT NULL,
   	Estado_Laboral VARCHAR(30) NULL,
+	password VARCHAR(255) NULL,
+    intentos_fallidos INTEGER DEFAULT 0,
+    bloqueado BOOLEAN DEFAULT FALSE,
   	PRIMARY KEY (Cedula_pk),
 	-- es dependiente de agencia y cargo
   	CONSTRAINT fk_empl_agencia FOREIGN KEY (CodigoAgencia_fk) REFERENCES AGENCIA(Codigo_pk),
