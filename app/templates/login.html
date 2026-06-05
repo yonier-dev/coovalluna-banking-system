@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+<style>
+    /* estilos específicos solo del login */
+    body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+    .container {
+        display: flex;
+        width: 800px;
+        height: 450px;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        overflow: hidden;
+    }
+    .welcome {
+        flex: 1;
+        background: linear-gradient(135deg, #004c99, #0099cc);
+        color: #fff;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 30px;
+    }
+    .welcome h1 { margin: 0; font-size: 28px; }
+    .welcome p { margin-top: 15px; font-size: 16px; text-align: center; line-height: 1.4; }
+    .login-form {
+        flex: 1;
+        padding: 40px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    .login-form h2 { margin-bottom: 20px; color: #004c99; text-align: center; }
+</style>
+
+<div class="container">
+    <div class="welcome">
+        <h1>Bienvenido a COOVALLUNA</h1>
+        <p>Acceda de manera segura a su perfil.<br>
+           Tres intentos fallidos bloquean la cuenta.</p>
+    </div>
+    <div class="login-form">
+        <h2>Ingreso al Sistema</h2>
+        <form method="POST" action="/login">
+            <label for="usuario">Usuario / Cédula</label>
+            <input id="usuario" name="usuario" type="text" placeholder="Ingrese su cédula">
+            <label for="password">Contraseña</label>
+            <input id="password" name="password" type="password" placeholder="Ingrese su contraseña">
+            <label for="perfil">Perfil de acceso</label>
+            <select id="perfil" name="perfil">
+                <option value="admin">Administrador del sistema</option>
+                <option value="asesor">Asesor / Cajero</option>
+                <option value="asociado">Asociado (autoservicio)</option>
+            </select>
+            <button type="submit">Ingresar al sistema</button>
+        </form>
+        <p class="note">Pantalla compartida por los tres perfiles</p>
+    </div>
+</div>
+{% endblock %}
