@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+{% block contenido %}
+<style>
+    body { background: #f4f7fb; }
+    .header {
+        background: linear-gradient(90deg, #004c99, #007acc);
+        color: #fff;
+        padding: 20px;
+        text-align: center;
+        font-size: 22px;
+        font-weight: bold;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    .logout { position: absolute; top: 20px; right: 30px; color: #fff; text-decoration: none; font-size: 14px; }
+    .back { position: absolute; top: 20px; left: 30px; color: #fff; text-decoration: none; font-size: 14px; }
+    .consulta-box {
+        margin: 40px auto;
+        background: #fff;
+        border: 3px solid #004c99;
+        border-radius: 12px;
+        padding: 30px;
+        width: 850px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    }
+    .section {
+        border: 2px solid #007acc;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 25px;
+        background: #f9fcff;
+    }
+    .section h3 { margin-top: 0; margin-bottom: 15px; color: #004c99; }
+    .datos-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .datos-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+    label { font-weight: bold; color: #333; display: block; margin-bottom: 6px; font-size: 13px; }
+    input {
+        width: 100%;
+        padding: 10px;
+        border: 2px solid #007acc;
+        border-radius: 8px;
+        font-size: 14px;
+        background: #f0f4f8;
+        box-sizing: border-box;
+    }
+    textarea {
+        width: 100%;
+        padding: 10px;
+        border: 2px solid #007acc;
+        border-radius: 8px;
+        font-size: 14px;
+        background: #f0f4f8;
+        box-sizing: border-box;
+        resize: none;
+    }
+    .badge-fundador {
+        display: inline-block;
+        background: #004c99;
+        color: #fff;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 13px;
+        margin-left: 10px;
+    }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #007acc; padding: 10px; text-align: center; font-size: 14px; }
+    th { background: #004c99; color: #fff; }
+    tr:nth-child(even) { background: #f9fcff; }
+    tr:hover { background: #e6f2ff; }
+    .no-data { text-align: center; color: #999; padding: 20px; font-size: 14px; }
+</style>
+
+<div class="header">
+    📋 Datos Personales y Beneficiarios
+    <a href="/asociado/dashboard" class="back">← Volver</a>
+    <a href="/logout" class="logout">Cerrar sesión</a>
+</div>
+
+<div class="consulta-box">
+
+    <!-- DATOS PERSONALES -->
+    <div class="section">
+        <h3>
+            👤 Datos Personales
+            {% if fundador %}
+                <span class="badge-fundador">⭐ Asociado Fundador</span>
+            {% endif %}
+        </h3>
+        <div class="datos-grid">
+            <div>
+                <label>Cédula</label>
+                <input type="text" value="{{ asociado.cedula_pk }}" readonly>
+            </div>
+            <div>
+                <label>Nombres</label>
+                <input type="text" value="{{ asociado.nombres }}" readonly>
+            </div>
+            <div>
+                <label>Apellidos</label>
+                <input type="text" value="{{ asociado.apellidos }}" readonly>
+            </div>
+            <div>
+                <label>Fecha de Nacimiento</label>
+                <input type="text" value="{{ asociado.fecha_na }}" readonly>
+            </div>
+            <div>
+                <label>Teléfono</label>
+                <input type="text" value="{{ asociado.telefono }}" readonly>
+            </div>
+            <div>
+                <label>Correo</label>
+                <input type="text" value="{{ asociado.correo }}" readonly>
+            </div>
+            <div>
+                <label>Municipio</label>
+                <input type="text" value="{{ asociado.municipio }}" readonly>
+            </div>
+            <div>
+                <label>Dirección</label>
+                <input type="text" value="{{ asociado.direccion }}" readonly>
+            </div>
+            <div>
+                <label>Estado</label>
+                <input type="text" value="{{ asociado.estado }}" readonly>
+            </div>
+            <div>
+                <label>Fecha de Afiliación</label>
+                <input type="text" value="{{ asociado.fech_afil }}" readonly>
+            </div>
+        </div>
+    </div>
+
+    <!-- DATOS FUNDADOR (solo si aplica) -->
+    {% if fundador %}
+    <div class="section">
+        <h3>⭐ Información de Asociado Fundador</h3>
+        <div class="datos-grid">
+            <div>
+                <label>N° Acta Fundacional</label>
+                <input type="text" value="{{ fundador.num_acta }}" readonly>
+            </div>
+            <div>
+                <label>Año de Reconocimiento</label>
+                <input type="text" value="{{ fundador.ano_reconocimiento }}" readonly>
+            </div>
+            <div>
+                <label>Fecha de Firma</label>
+                <input type="text" value="{{ fundador.fecha_firma }}" readonly>
+            </div>
+        </div>
+        <div style="margin-top: 15px;">
+            <label>Beneficios Especiales</label>
+            <textarea rows="3" readonly>{{ fundador.descripcion_beneficios }}</textarea>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- BENEFICIARIOS -->
+    <div class="section">
+        <h3>👪 Beneficiarios</h3>
+        {% if beneficiarios %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Documento</th>
+                    <th>Nombre Completo</th>
+                    <th>Parentesco</th>
+                    <th>Porcentaje</th>
+                    <th>Teléfono</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for b in beneficiarios %}
+                <tr>
+                    <td>{{ b.cedula_pk }}</td>
+                    <td>{{ b.nombre_completo }}</td>
+                    <td>{{ b.parentesco }}</td>
+                    <td>{{ b.porcentaje_participacion }}%</td>
+                    <td>{{ b.telefono }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="no-data">No hay beneficiarios registrados.</p>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}
