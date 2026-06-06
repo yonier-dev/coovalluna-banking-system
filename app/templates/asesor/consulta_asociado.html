@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% block contenido %}
+<style>
+    body { background: #f4f7fb; }
+    .header {
+        background: linear-gradient(90deg, #004c99, #007acc);
+        color: #fff;
+        padding: 20px;
+        text-align: center;
+        font-size: 22px;
+        font-weight: bold;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    .logout { position: absolute; top: 20px; right: 30px; color: #fff; text-decoration: none; font-size: 14px; }
+    .back { position: absolute; top: 20px; left: 30px; color: #fff; text-decoration: none; font-size: 14px; }
+    .consulta-box {
+        margin: 40px auto;
+        background: #fff;
+        border: 3px solid #004c99;
+        border-radius: 12px;
+        padding: 30px;
+        width: 1000px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    }
+    h2 { text-align: center; margin-bottom: 25px; color: #004c99; }
+    .search-bar {
+        display: flex;
+        flex-direction: column; /* 🔹 apila los elementos verticalmente */
+        gap: 15px;
+    margin-bottom: 25px;
+    }
+
+    .search-bar input {
+        flex: 1;
+        padding: 12px;
+        border: 2px solid #007acc;
+        border-radius: 8px;
+        font-size: 14px;
+    }
+    .search-bar button {
+        padding: 12px 20px;
+        background: linear-gradient(90deg, #004c99, #007acc);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+    .result-card {
+        border: 2px solid #007acc;
+        border-radius: 10px;
+        padding: 20px;
+        margin-top: 20px;
+        background: #e6f2ff;
+    }
+    .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px 30px; }
+    .label { font-weight: bold; color: #004c99; }
+    .section { margin-top: 20px; }
+    .section h3 { color: #004c99; margin-bottom: 10px; }
+    .section ul { list-style: none; padding: 0; }
+    .section li {
+        background: #fff;
+        border: 1px solid #007acc;
+        border-radius: 6px;
+        padding: 8px;
+        margin-bottom: 8px;
+    }
+    .no-data { color: #999; font-size: 14px; text-align: center; padding: 10px; }
+    .error-msg { color: #cc0000; font-weight: bold; text-align: center; padding: 10px; }
+</style>
+
+<div class="header">
+    🔍 Consulta de Asociado
+    <a href="/asesor/dashboard" class="back">← Volver</a>
+    <a href="/logout" class="logout">Cerrar sesión</a>
+</div>
+
+<div class="consulta-box">
+    <h2>Consulta de Asociado</h2>
+
+    <!-- buscador -->
+<form method="GET" action="/asesor/consulta-asociado">
+    <div class="search-bar">
+        <input name="busqueda" type="text" placeholder="Ingrese cédula o nombre"
+            value="{{ request.args.get('busqueda', '') }}">
+        <button type="submit">Buscar</button>
+    </div>
+</form>
+
+
+    <!-- resultado -->
+    {% if error %}
+        <div class="result-card">
+            <p class="error-msg">⚠️ {{ error }}</p>
+        </div>
+
+    {% elif asociado %}
+        <div class="result-card">
+
+            <!-- datos personales -->
+            <h3>Datos Personales</h3>
+            <div class="result-grid">
+                <div><span class="label">Cédula:</span> {{ asociado.cedula_pk }}</div>
+                <div><span class="label">Nombres:</span> {{ asociado.nombres }}</div>
+                <div><span class="label">Apellidos:</span> {{ asociado.apellidos }}</div>
+                <div><span class="label">Fecha Nac.:</span> {{ asociado.fecha_na }}</div>
+                <div><span class="label">Dirección:</span> {{ asociado.direccion }}</div>
+                <div><span class="label">Municipio:</span> {{ asociado.municipio }}</div>
+                <div><span class="label">Teléfono:</span> {{ asociado.telefono }}</div>
+                <div><span class="label">Correo:</span> {{ asociado.correo }}</div>
+                <div><span class="label">Fecha Afiliación:</span> {{ asociado.fech_afil }}</div>
+                <div><span class="label">Estado:</span> {{ asociado.estado }}</div>
+                <div><span class="label">Tipo Asociado:</span>
+                    {{ 'Fundador' if fundador else 'Normal' }}
+                </div>
+            </div>
+
+            <!-- datos fundador -->
+            {% if fundador %}
+            <div class="section">
+                <h3>⭐ Datos de Fundador</h3>
+                <div><span class="label">Acta Fundacional:</span> {{ fundador.num_acta }}</div>
+                <div><span class="label">Año Reconocimiento:</span> {{ fundador.ano_reconocimiento }}</div>
+                <div><span class="label">Beneficios:</span> {{ fundador.descripcion_beneficios }}</div>
+            </div>
+            {% endif %}
+
+            <!-- beneficiarios -->
+            <div class="section">
+                <h3>👪 Beneficiarios</h3>
+                {% if beneficiarios %}
+                <ul>
+                    {% for b in beneficiarios %}
+                    <li>
+                        <span class="label">Doc:</span> {{ b.cedula_pk }} |
+                        <span class="label">Nombre:</span> {{ b.nombre_completo }} |
+                        <span class="label">Parentesco:</span> {{ b.parentesco }} |
+                        <span class="label">Porcentaje:</span> {{ b.porcentaje_participacion }}% |
+                        <span class="label">Teléfono:</span> {{ b.telefono }}
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="no-data">No tiene beneficiarios registrados.</p>
+                {% endif %}
+            </div>
+
+            <!-- cuentas -->
+            <div class="section">
+                <h3>💳 Cuentas de Ahorro</h3>
+                {% if cuentas %}
+                <ul>
+                    {% for c in cuentas %}
+                    <li>
+                        <span class="label">Número:</span> {{ c.numero_pk }} |
+                        <span class="label">Estado:</span> {{ c.estado }} |
+                        <span class="label">Agencia:</span> {{ c.agencia }}
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="no-data">No tiene cuentas de ahorro.</p>
+                {% endif %}
+            </div>
+
+            <!-- creditos -->
+            <div class="section">
+                <h3>📄 Créditos</h3>
+                {% if creditos %}
+                <ul>
+                    {% for cr in creditos %}
+                    <li>
+                        <span class="label">Radicado:</span> {{ cr.num_radicado }} |
+                        <span class="label">Estado:</span> {{ cr.estado }} |
+                        <span class="label">Línea:</span> {{ cr.linea_credito }}
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="no-data">No tiene créditos registrados.</p>
+                {% endif %}
+            </div>
+
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% block contenido %}
+<style>
+    body { background: #f4f7fb; }
+    .header {
+        background: linear-gradient(90deg, #004c99, #007acc);
+        color: #fff;
+        padding: 20px;
+        text-align: center;
+        font-size: 22px;
+        font-weight: bold;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    .logout { position: absolute; top: 20px; right: 30px; color: #fff; text-decoration: none; font-size: 14px; }
+    .back { position: absolute; top: 20px; left: 30px; color: #fff; text-decoration: none; font-size: 14px; }
+    .asociado-box {
+        margin: 40px auto;
+        background: #fff;
+        border: 3px solid #004c99;
+        border-radius: 12px;
+        padding: 30px;
+        width: 950px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    }
+    h2 { text-align: center; margin-bottom: 25px; color: #004c99; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 30px; }
+    label { font-weight: bold; color: #333; display: block; margin-bottom: 6px; }
+    input, select, textarea {
+        width: 100%;
+        padding: 10px;
+        border: 2px solid #007acc;
+        border-radius: 8px;
+        font-size: 14px;
+        box-sizing: border-box;
+    }
+    input:focus, select:focus, textarea:focus {
+        border-color: #004c99;
+        outline: none;
+    }
+    .submit-btn {
+        grid-column: span 2;
+        padding: 14px;
+        background: linear-gradient(90deg, #004c99, #007acc);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .submit-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+    }
+    .extra-fields {
+        grid-column: span 2;
+        border: 2px dashed #007acc;
+        border-radius: 8px;
+        padding: 15px;
+        margin-top: 15px;
+        background: #f9fcff;
+        display: none;
+    }
+    .error {
+        color: #cc0000;
+        font-size: 13px;
+        margin-top: 5px;
+        grid-column: span 2;
+    }
+    .success {
+        color: green;
+        font-size: 14px;
+        margin-top: 10px;
+        grid-column: span 2;
+    }
+</style>
+
+<div class="header">
+    👤 Registro de Asociado
+    <a href="/asesor/dashboard" class="back">← Volver</a>
+    <a href="/logout" class="logout">Cerrar sesión</a>
+</div>
+
+<div class="asociado-box">
+    <h2>Registro de Asociado</h2>
+
+    {% if error %}
+    <p class="error" style="display:block;">⚠️ {{ error }}</p>
+    {% endif %}
+    {% if mensaje %}
+    <p class="success" style="display:block;">✅ {{ mensaje }}</p>
+    {% endif %}
+
+    <form method="POST" action="/asesor/registro-asociado" class="form-grid">
+        <div>
+            <label>Cédula</label>
+            <input name="cedula" type="text" required>
+        </div>
+        <div>
+            <label>Nombres</label>
+            <input name="nombres" type="text" required>
+        </div>
+        <div>
+            <label>Apellidos</label>
+            <input name="apellidos" type="text" required>
+        </div>
+        <div>
+            <label>Fecha de Nacimiento</label>
+            <input name="fecha_nacimiento" type="date" required>
+        </div>
+        <div>
+            <label>Dirección</label>
+            <input name="direccion" type="text" required>
+        </div>
+        <div>
+            <label>Municipio</label>
+            <input name="municipio" type="text" required>
+        </div>
+        <div>
+            <label>Teléfono</label>
+            <input name="telefono" type="tel" required>
+        </div>
+        <div>
+            <label>Correo Electrónico</label>
+            <input name="correo" type="email" required>
+        </div>
+        <div>
+            <label>Fecha de Afiliación</label>
+            <input name="fecha_afiliacion" type="date" required>
+        </div>
+        <div>
+            <label>Estado</label>
+            <select name="estado" required>
+                <option value="">Seleccione</option>
+                <option value="activo">Activo</option>
+                <option value="suspendido">Suspendido</option>
+                <option value="retirado">Retirado</option>
+            </select>
+        </div>
+        <div>
+            <label>Tipo de Asociado</label>
+            <select name="tipo" id="tipo" required>
+                <option value="">Seleccione</option>
+                <option value="normal">Normal</option>
+                <option value="fundador">Fundador</option>
+            </select>
+        </div>
+
+        <!-- campos extra para fundador -->
+        <div id="extraFields" class="extra-fields">
+            <h3>Datos de Fundador</h3>
+            <label>Número de Acta Fundacional</label>
+            <input name="acta" type="text">
+            <label>Año de Reconocimiento</label>
+            <input name="anio" type="number" min="1900" max="2100">
+            <label>Beneficios Especiales</label>
+            <textarea name="beneficios" rows="3" placeholder="Describa los beneficios"></textarea>
+        </div>
+
+        <button type="submit" class="submit-btn">Registrar Asociado</button>
+    </form>
+</div>
+
+<script>
+    const tipoSelect = document.getElementById('tipo');
+    const extraFields = document.getElementById('extraFields');
+
+    tipoSelect.addEventListener('change', () => {
+        extraFields.style.display = tipoSelect.value === 'fundador' ? 'block' : 'none';
+    });
+</script>
+{% endblock %}
