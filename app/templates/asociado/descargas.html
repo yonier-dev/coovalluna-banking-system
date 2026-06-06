@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block contenido %}
+<style>
+    body { background: #f4f7fb; }
+    .header {
+        background: linear-gradient(90deg, #004c99, #007acc);
+        color: #fff;
+        padding: 20px;
+        text-align: center;
+        font-size: 22px;
+        font-weight: bold;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    .logout { position: absolute; top: 20px; right: 30px; color: #fff; text-decoration: none; font-size: 14px; }
+    .back { position: absolute; top: 20px; left: 30px; color: #fff; text-decoration: none; font-size: 14px; }
+    .consulta-box {
+        margin: 40px auto;
+        background: #fff;
+        border: 3px solid #004c99;
+        border-radius: 12px;
+        padding: 30px;
+        width: 600px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    }
+    h2 { text-align: center; margin-bottom: 25px; color: #004c99; }
+    .form-group { margin-bottom: 20px; }
+    label { font-weight: bold; color: #333; display: block; margin-bottom: 6px; }
+    input, select {
+        width: 100%;
+        padding: 10px;
+        border: 2px solid #007acc;
+        border-radius: 8px;
+        font-size: 14px;
+        background: #fff;
+        box-sizing: border-box;
+    }
+    .buttons {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 20px;
+        gap: 15px;
+    }
+    .buttons a {
+        width: 48%;
+        padding: 12px;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        cursor: pointer;
+        color: #fff;
+        background: linear-gradient(90deg, #004c99, #007acc);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        text-align: center;
+        text-decoration: none;
+        display: block;
+    }
+    .buttons a:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+    }
+    .seccion {
+        border: 2px solid #007acc;
+        border-radius: 10px;
+        padding: 20px;
+        margin-bottom: 25px;
+        background: #f9fcff;
+    }
+    .seccion h3 { margin-top: 0; color: #004c99; }
+</style>
+
+<div class="header">
+    📂 Descarga de Extractos
+    <a href="/asociado/dashboard" class="back">← Volver</a>
+    <a href="/logout" class="logout">Cerrar sesión</a>
+</div>
+
+<div class="consulta-box">
+
+    <!-- extracto cuenta de ahorro -->
+    <div class="seccion">
+        <h3>💳 Extracto Cuenta de Ahorro</h3>
+        <form method="GET" action="/asociado/descargas/cuenta">
+            <div class="form-group">
+                <label>Cuenta de Ahorro</label>
+                <select name="cuenta">
+                    <option value="">Seleccione una cuenta</option>
+                    {% for cuenta in cuentas %}
+                    <option value="{{ cuenta.numero_pk }}">{{ cuenta.numero_pk }} — {{ cuenta.estado }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Fecha Inicio</label>
+                <input type="date" name="fecha_inicio">
+            </div>
+            <div class="form-group">
+                <label>Fecha Fin</label>
+                <input type="date" name="fecha_fin">
+            </div>
+            <div class="buttons">
+                <button type="submit" name="formato" value="pdf"
+                    style="width:48%;padding:12px;border:none;border-radius:8px;font-size:14px;cursor:pointer;color:#fff;background:linear-gradient(90deg,#004c99,#007acc);">
+                    📄 Descargar PDF
+                </button>
+                <button type="submit" name="formato" value="csv"
+                    style="width:48%;padding:12px;border:none;border-radius:8px;font-size:14px;cursor:pointer;color:#fff;background:linear-gradient(90deg,#004c99,#007acc);">
+                    📊 Descargar CSV
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- estado de cuenta credito -->
+    <div class="seccion">
+        <h3>📑 Estado de Cuenta de Crédito</h3>
+        <form method="GET" action="/asociado/descargas/credito">
+            <div class="form-group">
+                <label>Crédito</label>
+                <select name="credito">
+                    <option value="">Seleccione un crédito</option>
+                    {% for credito in creditos %}
+                    <option value="{{ credito.num_radicado }}">{{ credito.num_radicado }} — {{ credito.estado }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="buttons">
+                <button type="submit" name="formato" value="pdf"
+                    style="width:48%;padding:12px;border:none;border-radius:8px;font-size:14px;cursor:pointer;color:#fff;background:linear-gradient(90deg,#004c99,#007acc);">
+                    📄 Descargar PDF
+                </button>
+                <button type="submit" name="formato" value="csv"
+                    style="width:48%;padding:12px;border:none;border-radius:8px;font-size:14px;cursor:pointer;color:#fff;background:linear-gradient(90deg,#004c99,#007acc);">
+                    📊 Descargar CSV
+                </button>
+            </div>
+        </form>
+    </div>
+
+</div>
+{% endblock %}
