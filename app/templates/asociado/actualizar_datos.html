@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block contenido %}
+<style>
+    body { background: #f4f7fb; }
+    .header {
+        background: linear-gradient(90deg, #004c99, #007acc);
+        color: #fff;
+        padding: 20px;
+        text-align: center;
+        font-size: 22px;
+        font-weight: bold;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    .logout { position: absolute; top: 20px; right: 30px; color: #fff; text-decoration: none; font-size: 14px; }
+    .back { position: absolute; top: 20px; left: 30px; color: #fff; text-decoration: none; font-size: 14px; }
+    .solicitud-box {
+        margin: 40px auto;
+        background: #fff;
+        border: 3px solid #004c99;
+        border-radius: 12px;
+        padding: 30px;
+        width: 600px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    }
+    h2 { text-align: center; margin-bottom: 25px; color: #004c99; }
+    .form-group { margin-bottom: 20px; }
+    label { font-weight: bold; color: #333; display: block; margin-bottom: 6px; }
+    input {
+        width: 100%;
+        padding: 10px;
+        border: 2px solid #007acc;
+        border-radius: 8px;
+        font-size: 14px;
+        background: #fff;
+        box-sizing: border-box;
+    }
+    input:focus {
+        outline: none;
+        border-color: #004c99;
+        box-shadow: 0 0 5px rgba(0,76,153,0.5);
+    }
+    input[readonly] { background: #f0f4f8; }
+    button {
+        width: 100%;
+        padding: 12px;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        cursor: pointer;
+        color: #fff;
+        background: linear-gradient(90deg, #004c99, #007acc);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        margin-top: 5px;
+    }
+    button:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+    }
+    .estado {
+        margin-top: 20px;
+        border: 2px solid #007acc;
+        border-radius: 8px;
+        padding: 12px;
+        text-align: center;
+        font-weight: bold;
+        background: #f9fcff;
+    }
+    .estado.pendiente { color: orange; border-color: orange; }
+    .estado.aprobada { color: green; border-color: green; background: #f0fff0; }
+    .estado.rechazada { color: red; border-color: red; background: #fff0f0; }
+    .error { color: red; font-size: 13px; margin-top: 5px; }
+    .exito { color: green; font-size: 13px; margin-top: 5px; text-align: center; }
+</style>
+
+<div class="header">
+    📨 Solicitud de Actualización de Datos
+    <a href="/asociado/dashboard" class="back">← Volver</a>
+    <a href="/logout" class="logout">Cerrar sesión</a>
+</div>
+
+<div class="solicitud-box">
+    <h2>📨 Actualizar Datos de Contacto</h2>
+
+    {% if solicitud | default(none) %}
+<div class="estado {{ solicitud.estado }}">
+    Estado de la Solicitud: {{ solicitud.estado | capitalize }}
+</div>
+{% endif %}
+
+    <!-- datos actuales del asociado -->
+    <div class="form-group">
+        <label>Cédula</label>
+        <input type="text" value="{{ asociado.cedula_pk | default('')}}" readonly>
+    </div>
+
+    <!-- formulario de solicitud -->
+    <form method="POST" action="/asociado/actualizar-datos">
+        <div class="form-group">
+            <label>Nuevo Teléfono</label>
+            <input type="text" name="telefono" value="{{ asociado.telefono | default('') }}" placeholder="Ingrese nuevo teléfono"
+                value="{{ asociado.telefono }}">
+        </div>
+        <div class="form-group">
+            <label>Nuevo Correo</label>
+            <input type="email" name="correo" value="{{ asociado.correo | default('') }}" placeholder="Ingrese nuevo correo"
+                value="{{ asociado.correo }}">
+        </div>
+        <div class="form-group">
+            <label>Nueva Dirección</label>
+            <input type="text" name="direccion" value="{{ asociado.direccion | default('') }}" placeholder="Ingrese nueva dirección"
+                value="{{ asociado.direccion }}">
+        </div>
+        <button type="submit">Enviar Solicitud</button>
+    </form>
+
+    <!-- estado de la solicitud -->
+    {% if solicitud %}
+    <div class="estado {{ solicitud.estado }}">
+        Estado de la Solicitud: {{ solicitud.estado | capitalize }}
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

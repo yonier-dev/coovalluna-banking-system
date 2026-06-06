@@ -9,6 +9,7 @@ def dashboard():
         return redirect(url_for('auth.login'))
     return render_template('asociado/dashboard.html')
 
+# IMPLEMENTADA
 @asociado_bp.route('/asociado/datos-personales')
 def datos_personales():
     if session.get('perfil') != 'asociado':
@@ -64,3 +65,101 @@ def datos_personales():
                          asociado=asociado, 
                          fundador=fundador,
                          beneficiarios=beneficiarios)
+
+# NO IMPLEMENTADA
+@asociado_bp.route('/asociado/cuentas')
+def cuentas():
+    if session.get('perfil') != 'asociado':
+        return redirect(url_for('auth.login'))
+    # listar las cuentas de ahorro del asociado
+    # el saldo se calcula sumando depositos y restando retiros y transferencias salientes
+    # mostrar extracto con fecha, valor, tipo y canal de cada movimiento
+    # permitir filtrar por rango de fechas y por canal (presencial, app movil, cajero automatico)
+    # solo puede ver sus propias cuentas
+    # tener en cuenta variables del .html
+    return render_template('asociado/cuentas.html')
+
+# NO IMPLEMENTADA
+@asociado_bp.route('/asociado/creditos')
+def creditos():
+    if session.get('perfil') != 'asociado':
+        return redirect(url_for('auth.login'))
+    # obtener cedula del asociado desde la sesion
+    # cedula = session['cedula']
+
+    # mostrar creditos activos del asociado
+    # por cada credito: estado, valor de la cuota mensual, proxima fecha de vencimiento
+    # mostrar numero de cuotas pagadas sobre el total del credito
+    # el asociado solo puede ver sus propios creditos
+
+    # mandar al html lista de creditos, cada uno con su lista de cuotas y conteo de pagadas
+    # return render_template('asociado/creditos.html', creditos=creditos)
+    return render_template('asociado/creditos.html')
+
+# NO IMPLEMENTADA
+@asociado_bp.route('/asociado/descargas')
+def descargas():
+    if session.get('perfil') != 'asociado':
+        return redirect(url_for('auth.login'))
+    # obtener cedula del asociado desde la sesion
+    # cedula = session['cedula']
+
+    # permitir elegir entre formato PDF o CSV antes de descargar
+    # el extracto debe contener los movimientos del filtro aplicado
+    # mas el saldo calculado al final del periodo
+    # el estado de cuenta del credito debe contener cuotas, fechas de vencimiento,
+    # fechas de pago y montos abonados
+    
+    # mandar cuentas y creditos al html para llenar los selectores
+    # return render_template('asociado/descargas.html', cuentas=cuentas, creditos=creditos)
+    return render_template('asociado/descargas.html')
+
+@asociado_bp.route('/asociado/descargas/cuenta')
+def descargar_cuenta():
+    # recibir cuenta, fecha_inicio, fecha_fin y formato (pdf o csv) por GET
+    # consultar movimientos filtrados de esa cuenta
+    # calcular saldo dinamico
+    # si formato == 'pdf': generar PDF con reportlab o weasyprint
+    # si formato == 'csv': generar CSV con el modulo csv de python
+    # retornar el archivo como descarga con send_file
+    pass
+
+
+@asociado_bp.route('/asociado/descargas/credito')
+def descargar_credito():
+    # recibir credito y formato (pdf o csv) por GET
+    # consultar cuotas del credito con fechas de vencimiento, pago y montos
+    # si formato == 'pdf': generar PDF
+    # si formato == 'csv': generar CSV
+    # retornar el archivo como descarga con send_file
+    pass
+
+# NO IMPLEMENTADA
+
+@asociado_bp.route('/asociado/actualizar-datos', methods=['GET', 'POST'])
+def actualizar_datos():
+    if session.get('perfil') != 'asociado':
+        return redirect(url_for('auth.login'))
+
+    # GET: mostrar formulario con telefono, correo y direccion actuales
+    # POST: registrar solicitud como pendiente, no aplicar cambio de inmediato
+    # un asesor es quien aprueba o rechaza la solicitud
+    # mostrar el estado actual de la solicitud: pendiente, aprobada o rechazada
+    # tener en cuenta variables del .html
+
+    # mandar al html: datos del asociado, solicitud con su estado si existe
+
+    # datos vacios mientras el backend no esta listo
+    asociado = {
+        'cedula_pk': '',
+        'nombres': '',
+        'apellidos': '',
+        'telefono': '',
+        'correo': '',
+        'direccion': ''
+    }
+
+    return render_template('asociado/actualizar_datos.html',    
+                         asociado=asociado,
+                         solicitud=None,
+                         mensaje=None)

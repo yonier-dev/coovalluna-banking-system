@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% block contenido %}
+<style>
+    body { background: #f4f7fb; }
+    .header {
+        background: linear-gradient(90deg, #004c99, #007acc);
+        color: #fff;
+        padding: 20px;
+        text-align: center;
+        font-size: 22px;
+        font-weight: bold;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    .logout { position: absolute; top: 20px; right: 30px; color: #fff; text-decoration: none; font-size: 14px; }
+    .back { position: absolute; top: 20px; left: 30px; color: #fff; text-decoration: none; font-size: 14px; }
+    .consulta-box {
+        margin: 40px auto;
+        background: #fff;
+        border: 3px solid #004c99;
+        border-radius: 12px;
+        padding: 30px;
+        width: 850px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    }
+    h2 { text-align: center; margin-bottom: 25px; color: #004c99; }
+    .saldo {
+        font-size: 20px;
+        font-weight: bold;
+        color: green;
+        margin-bottom: 20px;
+        text-align: center;
+        padding: 15px;
+        background: #f0fff0;
+        border-radius: 8px;
+        border: 2px solid green;
+    }
+    .filtros {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        gap: 15px;
+    }
+    .filtros div { flex: 1; }
+    label { font-weight: bold; color: #333; display: block; margin-bottom: 6px; font-size: 13px; }
+    input, select {
+        width: 100%;
+        padding: 10px;
+        border: 2px solid #007acc;
+        border-radius: 8px;
+        font-size: 14px;
+        box-sizing: border-box;
+    }
+    button {
+        padding: 10px 25px;
+        background: #004c99;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        cursor: pointer;
+        align-self: flex-end;
+        transition: background 0.3s ease;
+    }
+    button:hover { background: #003366; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th, td { border: 1px solid #007acc; padding: 10px; text-align: center; font-size: 14px; }
+    th { background: #004c99; color: #fff; }
+    tr:nth-child(even) { background: #f9fcff; }
+    tr:hover { background: #e6f2ff; }
+    .no-data { text-align: center; color: #999; padding: 20px; font-size: 14px; }
+    .selector-cuenta {
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+</style>
+
+<div class="header">
+    💰 Consulta de Cuentas de Ahorro
+    <a href="/asociado/dashboard" class="back">← Volver</a>
+    <a href="/logout" class="logout">Cerrar sesión</a>
+</div>
+
+<div class="consulta-box">
+
+    <!-- selector de cuenta -->
+    <div class="selector-cuenta">
+        <label style="margin:0;">Cuenta:</label>
+        <select id="cuenta" style="flex:1;">
+            {% for cuenta in cuentas %}
+            <option value="{{ cuenta.numero_pk }}">
+                {{ cuenta.numero_pk }} — {{ cuenta.estado }} — Agencia {{ cuenta.agencia }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <!-- saldo dinamico -->
+    <div class="saldo">
+        Saldo Actual: ${{ saldo | default('0') }}
+    </div>
+
+    <!-- filtros -->
+    <form method="GET" action="/asociado/cuentas">
+        <div class="filtros">
+            <div>
+                <label>Fecha Inicio</label>
+                <input type="date" name="fecha_inicio" value="{{ request.args.get('fecha_inicio', '') }}">
+            </div>
+            <div>
+                <label>Fecha Fin</label>
+                <input type="date" name="fecha_fin" value="{{ request.args.get('fecha_fin', '') }}">
+            </div>
+            <div>
+                <label>Canal</label>
+                <select name="canal">
+                    <option value="">Todos</option>
+                    <option value="presencial" {% if request.args.get('canal') == 'presencial' %}selected{% endif %}>Presencial</option>
+                    <option value="aplicación móvil" {% if request.args.get('canal') == 'aplicación móvil' %}selected{% endif %}>App Móvil</option>
+                    <option value="cajero automático" {% if request.args.get('canal') == 'cajero automático' %}selected{% endif %}>Cajero Automático</option>
+                </select>
+            </div>
+            <div style="display:flex;align-items:flex-end;">
+                <button type="submit">Filtrar</button>
+            </div>
+        </div>
+    </form>
+
+    <!-- tabla movimientos -->
+    <table>
+        <thead>
+            <tr>
+                <th>N° Transacción</th>
+                <th>Fecha</th>
+                <th>Hora</th>
+                <th>Tipo Movimiento</th>
+                <th>Valor</th>
+                <th>Canal</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if movimientos %}
+                {% for m in movimientos %}
+                <tr>
+                    <td>{{ m.num_transaccion }}</td>
+                    <td>{{ m.fecha }}</td>
+                    <td>{{ m.hora }}</td>
+                    <td>{{ m.tipo_movimiento }}</td>
+                    <td>${{ m.valor }}</td>
+                    <td>{{ m.canal }}</td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr><td colspan="6" class="no-data">No hay movimientos para mostrar.</td></tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+</div>
+{% endblock %}
