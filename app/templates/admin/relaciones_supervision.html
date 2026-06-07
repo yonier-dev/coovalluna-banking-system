@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+{% block contenido %}
+
+<style>
+    body {
+        background: #f4f7fb;
+    }
+
+    .header {
+        background: linear-gradient(90deg, #004c99, #007acc);
+        color: white;
+        padding: 20px;
+        text-align: center;
+        font-size: 22px;
+        font-weight: bold;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+
+    .logout {
+        position: absolute;
+        top: 20px;
+        right: 30px;
+        color: white;
+        text-decoration: none;
+    }
+
+    .back {
+        position: absolute;
+        top: 20px;
+        left: 30px;
+        color: white;
+        text-decoration: none;
+    }
+
+    .container {
+        width: 95%;
+        max-width: 1200px;
+        margin: 30px auto;
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        border: 3px solid #004c99;
+    }
+
+    h2 {
+        text-align: center;
+        color: #004c99;
+        margin-bottom: 25px;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        margin-bottom: 25px;
+    }
+
+    .campo label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+
+    .campo select {
+        width: 100%;
+        padding: 10px;
+        border: 2px solid #007acc;
+        border-radius: 8px;
+        box-sizing: border-box;
+    }
+
+    .botones {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 30px;
+    }
+
+    .btn {
+        padding: 12px 20px;
+        border: none;
+        border-radius: 8px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    .btn:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    }
+
+    .asignar {
+        background: #007acc;
+        color: white;
+    }
+
+    .eliminar {
+        background: #007acc;
+        color: white;
+    }
+
+    .consultar {
+        background: #007acc;
+        color: white;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th {
+        background: #004c99;
+        color: white;
+        padding: 12px;
+        border: 1px solid #007acc;
+    }
+
+    td {
+        padding: 10px;
+        border: 1px solid #007acc;
+        text-align: center;
+    }
+
+    tr:nth-child(even) {
+        background: #f8fbff;
+    }
+
+    tr:hover {
+        background: #eaf4ff;
+    }
+</style>
+
+<div class="header">
+    Relaciones de Supervisión
+    <a href="/admin/dashboard" class="back">← Volver</a>
+    <a href="/logout" class="logout">Cerrar sesión</a>
+</div>
+
+<div class="container">
+
+    <h2>Administración de Relaciones de Supervisión</h2>
+
+    <div class="form-grid">
+
+        <div class="campo">
+            <label>Empleado Subordinado</label>
+            <select name="empleado_subordinado">
+                <option value="">Seleccione un empleado</option>
+            </select>
+        </div>
+
+        <div class="campo">
+            <label>Empleado Supervisor</label>
+            <select name="empleado_supervisor">
+                <option value="">Seleccione un supervisor</option>
+            </select>
+        </div>
+
+    </div>
+
+    <div class="botones">
+
+        <button class="btn asignar">
+            Asignar Supervisor
+        </button>
+
+        <button class="btn eliminar">
+            Eliminar Relación Supervisor
+        </button>
+
+        <button class="btn consultar">
+            Consultar Jerarquía
+        </button>
+
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Supervisor</th>
+                <th>Cargo Supervisor</th>
+                <th>Subordinado</th>
+                <th>Cargo Subordinado</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            <tr>
+                <td colspan="4">
+                    No hay relaciones de supervisión registradas
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+</div>
+
+{% endblock %}

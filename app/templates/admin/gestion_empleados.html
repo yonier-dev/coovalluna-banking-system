@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+{% block contenido %}
+
+<style>
+    body {
+        background: #f4f7fb;
+    }
+
+    .header {
+        background: linear-gradient(90deg, #004c99, #007acc);
+        color: white;
+        padding: 20px;
+        text-align: center;
+        font-size: 22px;
+        font-weight: bold;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+
+    .logout {
+        position: absolute;
+        top: 20px;
+        right: 30px;
+        color: white;
+        text-decoration: none;
+    }
+
+    .back {
+        position: absolute;
+        top: 20px;
+        left: 30px;
+        color: white;
+        text-decoration: none;
+    }
+
+    .container {
+        width: 95%;
+        max-width: 1500px;
+        margin: 30px auto;
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        border: 3px solid #004c99;
+    }
+
+    h2 {
+        text-align: center;
+        color: #004c99;
+        margin-bottom: 25px;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        margin-bottom: 25px;
+    }
+
+    .campo label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+
+    .campo input,
+    .campo select {
+        width: 100%;
+        padding: 10px;
+        border: 2px solid #007acc;
+        border-radius: 8px;
+        box-sizing: border-box;
+    }
+
+    .botones {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 30px;
+    }
+
+    .btn {
+        padding: 12px 20px;
+        border: none;
+        border-radius: 8px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+    .btn:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    }
+
+    .registrar {
+        background: #007acc;
+        color: white;
+    }
+
+    .modificar {
+        background: #007acc;
+        color: white;
+    }
+
+    .agencia {
+        background: #007acc;
+        color: white;
+    }
+
+    .estado {
+        background: #007acc;
+        color: white;
+    }
+
+    .buscar {
+        background: #007acc;
+        color: white;
+    }
+
+    .limpiar {
+        background: #007acc;
+        color: white;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th {
+        background: #004c99;
+        color: white;
+        padding: 12px;
+        border: 1px solid #007acc;
+    }
+
+    td {
+        padding: 10px;
+        border: 1px solid #007acc;
+        text-align: center;
+    }
+
+    tr:nth-child(even) {
+        background: #f8fbff;
+    }
+
+    tr:hover {
+        background: #eaf4ff;
+    }
+</style>
+
+<div class="header">
+    Gestión de Empleados
+    <a href="/admin/dashboard" class="back">← Volver</a>
+    <a href="/logout" class="logout">Cerrar sesión</a>
+</div>
+
+<div class="container">
+
+    <h2>Administración de Empleados</h2>
+
+    <div class="form-grid">
+
+        <div class="campo">
+            <label>Cédula</label>
+            <input type="text" name="cedula">
+        </div>
+
+        <div class="campo">
+            <label>Nombre</label>
+            <input type="text" name="nombre">
+        </div>
+
+        <div class="campo">
+            <label>Apellido</label>
+            <input type="text" name="apellido">
+        </div>
+
+        <div class="campo">
+            <label>Cargo</label>
+            <select name="cargo">
+                <option value="">Seleccione</option>
+                <option>Promotor</option>
+                <option>Atención Público</option>
+                <option>Director Agencia</option>
+            </select>
+        </div>
+
+        <div class="campo">
+            <label>Salario</label>
+            <input type="number" name="salario">
+        </div>
+
+        <div class="campo">
+            <label>Agencia</label>
+            <select name="agencia">
+                <option>Tuluá</option>
+            </select>
+        </div>
+
+        <div class="campo">
+            <label>Teléfono</label>
+            <input type="text" name="telefono">
+        </div>
+
+        <div class="campo">
+            <label>Estado</label>
+            <select name="estado">
+                <option value="">Seleccione</option>
+                <option>Activo</option>
+                <option>En Licencia</option>
+                <option>Retirado</option>
+            </select>
+        </div>
+
+        <div class="campo">
+            <label>Correo</label>
+            <input type="email" name="correo">
+        </div>
+
+    </div>
+
+    <div class="botones">
+
+        <button class="btn registrar">
+            Registrar Empleado
+        </button>
+
+        <button class="btn modificar">
+            Modificar Cargo
+        </button>
+
+        <button class="btn agencia">
+            Cambiar Agencia
+        </button>
+
+        <button class="btn estado">
+            Cambiar Estado
+        </button>
+
+        <button class="btn buscar">
+            Buscar Empleado
+        </button>
+
+        <button class="btn limpiar">
+            Limpiar Campos
+        </button>
+
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Cédula</th>
+                <th>Nombre</th>
+                <th>Apellido</th>
+                <th>Cargo</th>
+                <th>Teléfono</th>
+                <th>Correo</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            <tr>
+                <td colspan="6">
+                    No hay registros para mostrar
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+</div>
+
+{% endblock %}
