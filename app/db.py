@@ -4,10 +4,10 @@ import psycopg2
 
 def get_conexion():
     conexion = psycopg2.connect(
-        host="db.dluwuyuuewwipiztfgol.supabase.co",
-        database="postgres",   
-        user="postgres",             
-        password="coovalluna2026",         
+        host="aws-1-us-east-1.pooler.supabase.com",
+        database="postgres",  
+        user="postgres.dluwuyuuewwipiztfgol",            
+        password="coovalluna2026",        
         port="5432"
     )
     return conexion
