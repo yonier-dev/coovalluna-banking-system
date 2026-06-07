@@ -12,6 +12,7 @@ def dashboard():
 
     return render_template('asesor/dashboard.html')
 
+#  IMPLEMENTADA
 
 @asesor_bp.route('/asesor/consulta-asociado')
 def consultar_asociado():
@@ -172,3 +173,105 @@ def consultar_asociado():
 
         if conn:
             conn.close()
+
+
+# NO IMPLEMENTADA
+@asesor_bp.route('/asesor/actualizar-contacto', methods=['GET', 'POST'])
+def actualizar_contacto():
+    if session.get('perfil') != 'asesor':
+        return redirect(url_for('auth.login'))
+    # GET → muestra los datos actuales del asociado (teléfono, correo, dirección).
+    # POST → actualiza esos datos de contacto en la base de datos. mirar html
+    # No se permite modificar estado de vinculación ni datos personales (cédula, fecha de nacimiento).
+    # El asesor solo puede actualizar asociados de su agencia.
+    return render_template('asesor/actualizar_contacto.html')
+
+
+# NO IMPLEMENTADA
+@asesor_bp.route('/asesor/beneficiarios', methods=['GET', 'POST'])
+def beneficiarios():
+    # GET → muestra los beneficiarios actuales del asociado.
+    # POST → permite agregar nuevos beneficiarios (máximo 4 por asociado).
+    # Antes de guardar, validar que el porcentaje total de participación sea exactamente 100%.
+    # Registrar documento, nombre, parentesco, porcentaje y teléfono.
+    return render_template('asesor/beneficiarios.html')
+
+
+# NO IMPLEMENTADA
+@asesor_bp.route('/asesor/apertura-cuenta', methods=['GET', 'POST'])
+def apertura_cuenta():
+    # GET → muestra formulario para abrir cuenta de ahorro.
+    # POST → inserta nueva cuenta vinculada al asociado y agencia del asesor.
+    # El sistema debe generar automáticamente un número único de cuenta.
+    # Solo se permite abrir cuentas para asociados en estado “activo”.
+    return render_template('asesor/apertura_cuenta.html')
+
+
+# NO IMPLEMENTADA
+@asesor_bp.route('/asesor/deposito', methods=['GET', 'POST'])
+def deposito():
+    # GET → muestra formulario para registrar depósito.
+    # POST → inserta movimiento tipo “depósito” con valor, fecha, hora y canal.
+    # El saldo no se guarda como campo fijo, se calcula dinámicamente.
+    # No se pueden eliminar movimientos históricos.
+    return render_template('asesor/deposito.html')
+
+
+# NO IMPLEMENTADA
+@asesor_bp.route('/asesor/retiro', methods=['GET', 'POST'])
+def retiro():
+    # GET → muestra formulario para registrar retiro.
+    # POST → valida que el saldo calculado sea suficiente antes de realizar el retiro.
+    # Si el saldo es insuficiente, mostrar mensaje de error y no registrar el movimiento.
+    return render_template('asesor/retiro.html')
+
+
+# NO IMPLEMENTADA
+@asesor_bp.route('/asesor/transferencia', methods=['GET', 'POST'])
+def transferencia():
+    # GET → muestra formulario con cuentas origen y destino.
+    # POST → registra dos movimientos simultáneos:
+    #   - En cuenta origen: “transferencia saliente”
+    #   - En cuenta destino: “transferencia entrante”
+    # Ambos movimientos deben tener misma fecha, hora y valor.
+    return render_template('asesor/transferencia.html')
+
+
+# NO IMPLEMENTADA
+@asesor_bp.route('/asesor/solicitud-credito', methods=['GET', 'POST'])
+def solicitud_credito():
+    # GET → muestra formulario para radicar crédito.
+    # POST → inserta nuevo crédito con valor solicitado, plazo, tasa y línea de crédito.
+    # El sistema genera automáticamente el número de radicado.
+    # Si hay codeudor, registrar su cédula y fecha de firma del pagaré.
+    return render_template('asesor/solicitud_credito.html')
+
+
+# NO IMPLEMENTADA
+@asesor_bp.route('/asesor/pago-cuota', methods=['GET', 'POST'])
+def pago_cuota():
+    # GET → muestra formulario con créditos activos.
+    # POST → registra número de cuota, fecha de pago y valor pagado.
+    # Si la fecha de pago es posterior al vencimiento, marcar como “pagado con mora”.
+    # Actualizar el estado general del crédito si todas las cuotas están pagadas.
+    return render_template('asesor/pago_cuota.html')
+
+
+# NO IMPLEMENTADA
+@asesor_bp.route('/asesor/creditos-activos')
+def creditos_activos():
+    # GET → muestra los créditos activos o desembolsados del asociado.
+    # Debe mostrar: valor de cuota, fecha de próximo vencimiento, número de cuotas pagadas y estado general.
+    # El asesor solo puede ver créditos de asociados de su agencia.
+    return render_template('asesor/creditos_activos.html')
+
+
+# NO IMPLEMENTADA
+@asesor_bp.route('/asesor/mora')
+def asociados_mora():
+    # GET → lista los asociados con cuotas vencidas o en mora.
+    # Debe mostrar: nombre del asociado, número de crédito, número de cuota vencida, días de mora y asesor responsable.
+    # Calcular días de mora desde la fecha de vencimiento hasta la actual.
+    # Mostrar solo asociados en mora de la agencia del asesor.
+    return render_template('asesor/mora.html')
+
