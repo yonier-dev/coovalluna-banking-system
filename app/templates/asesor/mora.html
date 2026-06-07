@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block contenido %}
+<style>
+    body { background: #f4f7fb; }
+    .header {
+        background: linear-gradient(90deg, #004c99, #007acc);
+        color: #fff;
+        padding: 20px;
+        text-align: center;
+        font-size: 22px;
+        font-weight: bold;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    .logout { position: absolute; top: 20px; right: 30px; color: #fff; text-decoration: none; font-size: 14px; }
+    .back { position: absolute; top: 20px; left: 30px; color: #fff; text-decoration: none; font-size: 14px; }
+    .reporte-box {
+        margin: 40px auto;
+        background: #fff;
+        border: 3px solid #004c99;
+        border-radius: 12px;
+        padding: 30px;
+        width: 900px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    }
+    h2 { text-align: center; margin-bottom: 25px; color: #004c99; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th, td { border: 1px solid #007acc; padding: 10px; text-align: center; font-size: 14px; }
+    th { background: #004c99; color: #fff; }
+    tr:nth-child(even) { background: #f9fcff; }
+    tr:hover { background: #e6f2ff; }
+    .estado-mora { color: red; font-weight: bold; }
+    .no-data { text-align: center; color: #999; padding: 20px; font-size: 14px; }
+</style>
+
+<div class="header">
+     Reporte de Asociados en Mora
+    <a href="/asesor/dashboard" class="back">← Volver</a>
+    <a href="/logout" class="logout">Cerrar sesión</a>
+</div>
+
+<div class="reporte-box">
+    <h2>📊 Reporte de Asociados en Mora</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Número de Crédito</th>
+                <th>Cuota Vencida</th>
+                <th>Días de Mora</th>
+                <th>Asesor Responsable</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if mora %}
+                {% for m in mora %}
+                <tr>
+                    <td>{{ m.nombre_asociado }}</td>
+                    <td>{{ m.num_credito }}</td>
+                    <td>{{ m.num_cuota }}</td>
+                    <td class="estado-mora">{{ m.dias_mora }}</td>
+                    <td>{{ m.nombre_asesor }}</td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr><td colspan="5" class="no-data">No hay asociados en mora.</td></tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% block contenido %}
+<style>
+    body {
+        background: #f4f7fb;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        min-height: 100vh;
+        margin: 0;
+        box-sizing: border-box;
+    }
+
+    .header {
+        background: linear-gradient(90deg, #004c99, #007acc);
+        color: #fff;
+        padding: 20px;
+        text-align: center;
+        font-size: 22px;
+        font-weight: bold;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        width: 100%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 10;
+        box-sizing: border-box;
+    }
+
+    .logout { position: absolute; top: 20px; right: 30px; color: #fff; text-decoration: none; font-size: 14px; }
+    .back { position: absolute; top: 20px; left: 30px; color: #fff; text-decoration: none; font-size: 14px; }
+
+    .credito-box {
+        margin-top: 120px;
+        background: #fff;
+        border: 3px solid #004c99;
+        border-radius: 12px;
+        padding: 30px 40px;
+        width: 700px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    }
+
+    h2 {
+        text-align: center;
+        margin-bottom: 25px;
+        color: #004c99;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px 30px;
+    }
+
+    label {
+        font-weight: bold;
+        color: #004c99;
+        display: block;
+        margin-bottom: 6px;
+    }
+
+    input, select {
+        width: 100%;
+        padding: 10px;
+        border: 2px solid #007acc;
+        border-radius: 8px;
+        font-size: 14px;
+    }
+
+    input:focus, select:focus {
+        border-color: #004c99;
+        outline: none;
+    }
+
+    .submit-btn {
+        grid-column: span 2;
+        padding: 14px;
+        background: linear-gradient(90deg, #004c99, #007acc);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .submit-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+    }
+
+    .error, .success {
+        grid-column: span 2;
+        font-size: 14px;
+        margin-top: 10px;
+        text-align: center;
+        font-weight: bold;
+        display: none;
+    }
+
+    .error { color: #cc0000; }
+    .success { color: green; }
+</style>
+
+<div class="header">
+     Solicitud de Crédito
+    <a href="/asesor/dashboard" class="back">← Volver</a>
+    <a href="/logout" class="logout">Cerrar sesión</a>
+</div>
+
+<div class="credito-box">
+    <h2>Formulario de Solicitud</h2>
+    <form id="creditoForm" class="form-grid" method="POST">
+      <div>
+        <label for="cedula">Cédula del Asociado</label>
+        <input id="cedula" name="cedula" type="text" placeholder="Ingrese la cédula" required>
+      </div>
+      <div>
+        <label for="radicado">Número de Radicado</label>
+        <input id="radicado" name="radicado" type="text" readonly>
+      </div>
+      <div>
+        <label for="valor">Valor Solicitado</label>
+        <input id="valor" name="valor" type="number" placeholder="Ingrese valor solicitado" required>
+      </div>
+      <div>
+        <label for="plazo">Plazo (meses)</label>
+        <input id="plazo" name="plazo" type="number" placeholder="Ingrese plazo en meses" required>
+      </div>
+      <div>
+        <label for="tasa">Tasa de Interés (%)</label>
+        <input id="tasa" name="tasa" type="number" step="0.01" placeholder="Ingrese tasa mensual" required>
+      </div>
+      <div>
+        <label for="linea">Línea de Crédito</label>
+        <select id="linea" name="linea" required>
+          <option value="">Seleccione</option>
+          <option value="Libre Inversión">Libre Inversión</option>
+          <option value="Vivienda">Vivienda</option>
+          <option value="Agropecuario">Agropecuario</option>
+          <option value="Educativo">Educativo</option>
+          <option value="Empresarial">Empresarial</option>
+        </select>
+      </div>
+      <div>
+        <label for="codeudor">Cédula del Codeudor (opcional)</label>
+        <input id="codeudor" name="codeudor" type="text" placeholder="Ingrese cédula del codeudor">
+      </div>
+      <div>
+        <label for="fechaCodeudor">Fecha Firma Pagaré (opcional)</label>
+        <input id="fechaCodeudor" name="fechaCodeudor" type="date">
+      </div>
+
+      <button type="submit" class="submit-btn">Registrar Solicitud</button>
+      <div id="errorMsg" class="error">⚠️ Datos incompletos o inválidos</div>
+      <div id="successMsg" class="success">✅ Solicitud registrada correctamente. Radicado: <span id="numRadicado"></span></div>
+    </form>
+</div>
+
+<script>
+    const form = document.getElementById('creditoForm');
+    const errorMsg = document.getElementById('errorMsg');
+    const successMsg = document.getElementById('successMsg');
+    const numRadicadoSpan = document.getElementById('numRadicado');
+    const radicadoInput = document.getElementById('radicado');
+
+    // Generar radicado automático al cargar
+    radicadoInput.value = "CR-" + Math.floor(Math.random() * 1000000);
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const cedula = document.getElementById('cedula').value.trim();
+      const valor = document.getElementById('valor').value.trim();
+      const plazo = document.getElementById('plazo').value.trim();
+      const tasa = document.getElementById('tasa').value.trim();
+      const linea = document.getElementById('linea').value;
+      const fecha = document.getElementById('fecha').value;
+
+      if (cedula !== "" && valor !== "" && plazo !== "" && tasa !== "" && linea !== "" && fecha !== "") {
+        errorMsg.style.display = "none";
+        successMsg.style.display = "block";
+        numRadicadoSpan.textContent = radicadoInput.value;
+        form.reset();
+        radicadoInput.value = "CR-" + Math.floor(Math.random() * 1000000); // nuevo radicado para siguiente solicitud
+      } else {
+        successMsg.style.display = "none";
+        errorMsg.style.display = "block";
+      }
+    });
+</script>
+{% endblock %}

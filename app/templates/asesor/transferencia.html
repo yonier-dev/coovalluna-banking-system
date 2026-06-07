@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% block contenido %}
+<style>
+    body {
+        background: #f4f7fb;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        min-height: 100vh;
+        margin: 0;
+        box-sizing: border-box;
+    }
+
+    .header {
+        background: linear-gradient(90deg, #004c99, #007acc);
+        color: #fff;
+        padding: 20px;
+        text-align: center;
+        font-size: 22px;
+        font-weight: bold;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        width: 100%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 10;
+        box-sizing: border-box;
+    }
+
+    .logout { position: absolute; top: 20px; right: 30px; color: #fff; text-decoration: none; font-size: 14px; }
+    .back { position: absolute; top: 20px; left: 30px; color: #fff; text-decoration: none; font-size: 14px; }
+
+    .transferencia-box {
+        margin-top: 120px;
+        background: #fff;
+        border: 3px solid #004c99;
+        border-radius: 12px;
+        padding: 30px 40px;
+        width: 650px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    }
+
+    h2 {
+        text-align: center;
+        margin-bottom: 25px;
+        color: #004c99;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px 30px;
+    }
+
+    label {
+        font-weight: bold;
+        color: #004c99;
+        display: block;
+        margin-bottom: 6px;
+    }
+
+    input, select {
+        width: 100%;
+        padding: 10px;
+        border: 2px solid #007acc;
+        border-radius: 8px;
+        font-size: 14px;
+    }
+
+    input:focus, select:focus {
+        border-color: #004c99;
+        outline: none;
+    }
+
+    .submit-btn {
+        grid-column: span 2;
+        padding: 14px;
+        background: linear-gradient(90deg, #004c99, #007acc);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .submit-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+    }
+
+    .error, .success {
+        grid-column: span 2;
+        font-size: 14px;
+        margin-top: 10px;
+        text-align: center;
+        font-weight: bold;
+        display: none;
+    }
+
+    .error { color: #cc0000; }
+    .success { color: green; }
+</style>
+
+<div class="header">
+     Registro de Transferencia
+    <a href="/asesor/dashboard" class="back">← Volver</a>
+    <a href="/logout" class="logout">Cerrar sesión</a>
+</div>
+
+<div class="transferencia-box">
+    <h2>Formulario de Transferencia</h2>
+    <form id="transferenciaForm" class="form-grid" method="POST">
+        <div>
+            <label for="cedula">Cédula del Asociado</label>
+            <input id="cedula" name="cedula" type="text" placeholder="Ingrese la cédula" required>
+        </div>
+        <div>
+            <label for="cuentaOrigen">Cuenta Origen</label>
+            <input id="cuentaOrigen" name="cuentaOrigen" type="text" placeholder="Número de cuenta origen" required>
+        </div>
+        <div>
+            <label for="cuentaDestino">Cuenta Destino</label>
+            <input id="cuentaDestino" name="cuentaDestino" type="text" placeholder="Número de cuenta destino" required>
+        </div>
+        <div>
+            <label for="valor">Valor de la Transferencia</label>
+            <input id="valor" name="valor" type="number" placeholder="Ingrese valor" required>
+        </div>
+        <div>
+            <label for="canal">Canal</label>
+            <select id="canal" name="canal" required>
+                <option value="">Seleccione</option>
+                <option value="Presencial">Presencial</option>
+                <option value="App Móvil">App Móvil</option>
+                <option value="Cajero Automático">Cajero Automático</option>
+            </select>
+        </div>
+
+        <button type="submit" class="submit-btn">Registrar Transferencia</button>
+        <div id="errorMsg" class="error">⚠️ Saldo insuficiente o datos incompletos</div>
+        <div id="successMsg" class="success">✅ Transferencia registrada correctamente</div>
+    </form>
+</div>
+
+<script>
+    const form = document.getElementById('transferenciaForm');
+    const errorMsg = document.getElementById('errorMsg');
+    const successMsg = document.getElementById('successMsg');
+
+    // Simulación de saldos de cuentas
+    const cuentas = {
+      "10001": 500000,
+      "10002": 200000
+    };
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const cedula = document.getElementById('cedula').value.trim();
+      const origen = document.getElementById('cuentaOrigen').value.trim();
+      const destino = document.getElementById('cuentaDestino').value.trim();
+      const valor = parseInt(document.getElementById('valor').value);
+      const fecha = document.getElementById('fecha').value;
+      const hora = document.getElementById('hora').value;
+      const canal = document.getElementById('canal').value;
+
+      if (cedula !== "" && origen !== "" && destino !== "" && valor > 0 && fecha !== "" && hora !== "" && canal !== "") {
+        if (cuentas[origen] && cuentas[origen] >= valor && cuentas[destino]) {
+          cuentas[origen] -= valor; // transferencia saliente
+          cuentas[destino] += valor; // transferencia entrante
+          errorMsg.style.display = "none";
+          successMsg.style.display = "block";
+          form.reset();
+        } else {
+          successMsg.style.display = "none";
+          errorMsg.style.display = "block";
+        }
+      } else {
+        successMsg.style.display = "none";
+        errorMsg.style.display = "block";
+      }
+    });
+</script>
+{% endblock %}
