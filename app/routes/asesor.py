@@ -470,7 +470,7 @@ def registrar_asociado():
         conn = get_conexion()
         cur = conn.cursor(cursor_factory=RealDictCursor)
 
-        # Verificar si ya existe
+        # verifica si ya existe un asociado con la misma cedula para evitar duplicados
         cur.execute("""
             SELECT cedula_pk
             FROM ASOCIADO
@@ -483,7 +483,7 @@ def registrar_asociado():
                 error='Ya existe un asociado con esa cédula'
             )
 
-        # Registrar asociado
+        # registra el asociado
         cur.execute("""
             INSERT INTO ASOCIADO (
                 cedula_pk,
@@ -518,7 +518,7 @@ def registrar_asociado():
             cedula  # contraseña inicial
         ))
 
-        # Registrar fundador si aplica
+        # Se registra info adicional si es fundador
         if tipo == 'fundador':
 
             acta = request.form.get('acta')
@@ -560,7 +560,7 @@ def registrar_asociado():
 
         agencia = asesor['codigoagencia_fk']
 
-        # Crear cuenta de ahorro automática
+        # crear cuenta de ahorro automaticamente para el asociado, con un numero único generado a partir de su cedula y la agencia del asesor
         numero_cuenta = f"CA{cedula}"
 
         cur.execute("""
