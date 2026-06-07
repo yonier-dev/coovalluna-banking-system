@@ -260,10 +260,28 @@ def pago_cuota():
 # NO IMPLEMENTADA
 @asesor_bp.route('/asesor/creditos-activos')
 def creditos_activos():
-    # GET → muestra los créditos activos o desembolsados del asociado.
-    # Debe mostrar: valor de cuota, fecha de próximo vencimiento, número de cuotas pagadas y estado general.
-    # El asesor solo puede ver créditos de asociados de su agencia.
-    return render_template('asesor/creditos_activos.html')
+    if session.get('perfil') != 'asesor':
+        return redirect(url_for('auth.login'))
+
+    # datos de prueba temporales para ver el html
+    creditos = [
+        {
+            'num_radicado': 'CRED-001',
+            'nombre_asociado': 'Emilce Rentería',
+            'valor_aprobado': '5,000,000',
+            'estado': 'al día',
+            'linea_credito': 'libre inversión',
+            'plazo_meses': 24,
+            'cuotas_pagadas': 6,
+            'cuotas': [
+                {'num_cuota': 1, 'fecha_vencimiento': '2023-02-15', 'fech_pago': '2023-02-15', 'valor_pagado': '245,000', 'estado_pago': 'a tiempo'},
+                {'num_cuota': 2, 'fecha_vencimiento': '2023-03-15', 'fech_pago': '2023-03-15', 'valor_pagado': '245,000', 'estado_pago': 'a tiempo'},
+                {'num_cuota': 3, 'fecha_vencimiento': '2023-04-15', 'fech_pago': None, 'valor_pagado': '0', 'estado_pago': 'pendiente'},
+            ]
+        }
+    ]
+
+    return render_template('asesor/creditos_activos.html', creditos=creditos)
 
 
 # NO IMPLEMENTADA

@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block contenido %}
+<style>
+    body { background: #f4f7fb; }
+    .header {
+        background: linear-gradient(90deg, #004c99, #007acc);
+        color: #fff;
+        padding: 20px;
+        text-align: center;
+        font-size: 22px;
+        font-weight: bold;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    .logout { position: absolute; top: 20px; right: 30px; color: #fff; text-decoration: none; font-size: 14px; }
+    .back { position: absolute; top: 20px; left: 30px; color: #fff; text-decoration: none; font-size: 14px; }
+    .consulta-box {
+        margin: 40px auto;
+        background: #fff;
+        border: 3px solid #004c99;
+        border-radius: 12px;
+        padding: 30px;
+        width: 900px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    }
+    h2 { text-align: center; margin-bottom: 25px; color: #004c99; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th, td { border: 1px solid #007acc; padding: 10px; text-align: center; font-size: 14px; }
+    th { background: #004c99; color: #fff; }
+    tr:nth-child(even) { background: #f9fcff; }
+    tr:hover { background: #e6f2ff; }
+    .estado-pagada { color: green; font-weight: bold; }
+    .estado-pendiente { color: orange; font-weight: bold; }
+    .estado-mora { color: red; font-weight: bold; }
+    .no-data { text-align: center; color: #999; padding: 20px; font-size: 14px; }
+    .titulo-credito {
+        color: #004c99;
+        margin-top: 25px;
+        margin-bottom: 5px;
+        font-size: 15px;
+        font-weight: bold;
+        border-bottom: 2px solid #007acc;
+        padding-bottom: 5px;
+    }
+    .resumen {
+        background: #f0f7ff;
+        border: 2px solid #007acc;
+        border-radius: 8px;
+        padding: 10px 15px;
+        margin-bottom: 10px;
+        font-size: 14px;
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 8px;
+    }
+    .resumen span strong { color: #004c99; }
+</style>
+
+<div class="header">
+     Consulta de Créditos Activos
+    <a href="/asesor/dashboard" class="back">← Volver</a>
+    <a href="/logout" class="logout">Cerrar sesión</a>
+</div>
+
+<div class="consulta-box">
+    <h2>📑 Consulta de Créditos Activos</h2>
+
+    {% if creditos %}
+        {% for credito in creditos %}
+
+        <div class="titulo-credito">Crédito N° {{ credito.num_radicado }}</div>
+        <div class="resumen">
+            <span><strong>Asociado:</strong> {{ credito.nombre_asociado }}</span>
+            <span><strong>Valor Aprobado:</strong> ${{ credito.valor_aprobado }}</span>
+            <span><strong>Estado:</strong> {{ credito.estado }}</span>
+            <span><strong>Línea:</strong> {{ credito.linea_credito }}</span>
+            <span><strong>Plazo:</strong> {{ credito.plazo_meses }} meses</span>
+            <span><strong>Cuotas Pagadas:</strong> {{ credito.cuotas_pagadas }} / {{ credito.plazo_meses }}</span>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>N° Cuota</th>
+                    <th>Fecha Vencimiento</th>
+                    <th>Fecha Pago</th>
+                    <th>Valor Pagado</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cuota in credito.cuotas %}
+                <tr>
+                    <td>{{ cuota.num_cuota }}</td>
+                    <td>{{ cuota.fecha_vencimiento }}</td>
+                    <td>{{ cuota.fech_pago if cuota.fech_pago else '—' }}</td>
+                    <td>${{ cuota.valor_pagado }}</td>
+                    <td class="
+                        {% if cuota.estado_pago == 'a tiempo' %}estado-pagada
+                        {% elif cuota.estado_pago == 'pendiente' %}estado-pendiente
+                        {% elif cuota.estado_pago == 'pagado con mora' %}estado-mora
+                        {% endif %}
+                    ">{{ cuota.estado_pago }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% endfor %}
+    {% else %}
+        <p class="no-data">No hay créditos activos registrados.</p>
+    {% endif %}
+
+</div>
+{% endblock %}
