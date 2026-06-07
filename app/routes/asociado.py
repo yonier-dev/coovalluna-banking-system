@@ -79,22 +79,86 @@ def cuentas():
     # tener en cuenta variables del .html
     return render_template('asociado/cuentas.html')
 
-# NO IMPLEMENTADA
+#  IMPLEMENTADA
 @asociado_bp.route('/asociado/creditos')
 def creditos():
     if session.get('perfil') != 'asociado':
         return redirect(url_for('auth.login'))
-    # obtener cedula del asociado desde la sesion
-    # cedula = session['cedula']
+    
+    cedula = session['cedula']
+    conn = get_conexion()
+    cur = conn.cursor()
+     #Consulta SQL  que obtiene los creditos del asociado
+    cur.execute("""
+               SELECT
+            C.num_radicado_pk,
+            C.valor_aprovado,
+            C.linea_credito,
+            C.estado,
+            C.plazo_meses,
+            C.tasa_interes_m,
+            C.fech_prim_ven
+        FROM CREDITO C
+        INNER JOIN SOLICITA S
+            ON S.num_radicadoCredito_fk = C.num_radicado_pk
+        WHERE S.cedulaAsociado_fk = %s 
+          AND C.estado <> 'cancelado';
+                """, (cedula,)) # el comando %s  permite ver la cedula obtenida anteriormente
+    
+    filas_creditos = cur.fetchall()
+    creditos = []# Se crea Lista de creditos
+    for c in filas_creditos:
+        num_radicado = c[0]
 
-    # mostrar creditos activos del asociado
-    # por cada credito: estado, valor de la cuota mensual, proxima fecha de vencimiento
-    # mostrar numero de cuotas pagadas sobre el total del credito
-    # el asociado solo puede ver sus propios creditos
+     # Esta consulta es para obtener las cuotas asociadas al credito
+        cur.execute("""
+           SELECT
+        Num_cuota,
+        Fech_pago,
+        Valor_pagado,
+        Estado_pago
+    FROM CUOTAS
+    WHERE Num_radicado_fk = %s
+    ORDER BY Num_cuota
+        """, (num_radicado,))
 
-    # mandar al html lista de creditos, cada uno con su lista de cuotas y conteo de pagadas
-    # return render_template('asociado/creditos.html', creditos=creditos)
-    return render_template('asociado/creditos.html')
+    filas_cuotas = cur.fetchall()
+
+    cuotas = [
+            {
+                'num_cuota': q[0],
+                'fecha_vencimiento': c[6],  # temporalmente uso la primera fecha de vencimiento mientras resuelvo un detalle con esto
+                'fech_pago': q[1],
+                'valor_pagado': q[2],
+                'estado_pago': q[3]
+            }
+            for q in filas_cuotas
+        ]
+
+    cuotas_pagadas = len([
+            q for q in cuotas
+            if q['estado_pago'] and q['estado_pago'].lower() != 'pendiente'
+        ])
+
+    creditos.append({
+            'num_radicado': c[0],
+            'valor_aprobado': c[1],
+            'linea_credito': c[2],
+            'estado': c[3],
+            'plazo_meses': c[4],
+            'tasa_interes': c[5],
+            'cuotas_pagadas': cuotas_pagadas,
+            'cuotas': cuotas
+        })
+
+    print("CEDULA:", cedula)#Outputs para saber que en efecto funciona correctamente
+    cur.close()
+    print("RADICADO:", num_radicado)
+    conn.close()
+    
+    print("CREDITOS:", creditos)
+   
+    return render_template('asociado/creditos.html',creditos=creditos)
 
 # NO IMPLEMENTADA
 @asociado_bp.route('/asociado/descargas')
