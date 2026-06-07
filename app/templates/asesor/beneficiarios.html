@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% block contenido %}
+<style>
+    body { background: #f4f7fb; }
+    .header {
+        background: linear-gradient(90deg, #004c99, #007acc);
+        color: #fff;
+        padding: 20px;
+        text-align: center;
+        font-size: 22px;
+        font-weight: bold;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    .logout { position: absolute; top: 20px; right: 30px; color: #fff; text-decoration: none; font-size: 14px; }
+    .back { position: absolute; top: 20px; left: 30px; color: #fff; text-decoration: none; font-size: 14px; }
+    .beneficiarios-box {
+        margin: 40px auto;
+        background: #fff;
+        border: 3px solid #004c99;
+        border-radius: 12px;
+        padding: 30px;
+        width: 1000px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    }
+    h2 { text-align: center; margin-bottom: 25px; color: #004c99; }
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px 20px;
+    }
+    label { font-weight: bold; color: #004c99; margin-bottom: 6px; display: block; }
+    input, select {
+        width: 100%;
+        padding: 10px;
+        border: 2px solid #007acc;
+        border-radius: 8px;
+        font-size: 14px;
+    }
+    .submit-btn {
+        grid-column: span 2;
+        padding: 12px;
+        background: linear-gradient(90deg, #004c99, #007acc);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: bold;
+        transition: background 0.3s ease;
+    }
+    .submit-btn:hover { background: #003366; }
+    .error, .success {
+        grid-column: span 2;
+        font-size: 14px;
+        margin-top: 10px;
+        text-align: center;
+        font-weight: bold;
+        display: none;
+    }
+    .error { color: #cc0000; }
+    .success { color: green; }
+    .beneficiario-block {
+        grid-column: span 2;
+        border: 2px dashed #007acc;
+        border-radius: 8px;
+        padding: 15px;
+        margin-top: 15px;
+        background: #e6f2ff;
+    }
+    .beneficiario-block h3 { margin-top: 0; color: #004c99; }
+</style>
+
+<div class="header">
+     Registro de Beneficiarios
+    <a href="/asesor/dashboard" class="back">← Volver</a>
+    <a href="/logout" class="logout">Cerrar sesión</a>
+</div>
+
+<div class="beneficiarios-box">
+    <h2>Formulario de Beneficiarios</h2>
+    <form id="beneficiariosForm" class="form-grid" method="POST">
+        <!-- Cédula del asociado -->
+        <div>
+            <label for="cedulaAsociado">Cédula del Asociado</label>
+            <input id="cedulaAsociado" name="cedulaAsociado" type="text" placeholder="Ingrese la cédula" required>
+        </div>
+        <div></div>
+
+        <!-- Selección de cantidad -->
+        <div>
+            <label for="cantidad">Cantidad de Beneficiarios</label>
+            <select id="cantidad" name="cantidad" required>
+                <option value="">Seleccione</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+            </select>
+        </div>
+        <div></div>
+
+        <!-- Contenedor dinámico -->
+        <div id="beneficiariosContainer" class="form-grid" style="grid-column: span 2;"></div>
+
+        <button type="submit" class="submit-btn">Registrar Beneficiarios</button>
+        <div id="errorMsg" class="error">⚠️ La suma de porcentajes debe ser 100% y la cédula no puede estar vacía</div>
+        <div id="successMsg" class="success">✅ Beneficiarios registrados correctamente</div>
+    </form>
+</div>
+
+<script>
+    const cantidadSelect = document.getElementById('cantidad');
+    const container = document.getElementById('beneficiariosContainer');
+    const form = document.getElementById('beneficiariosForm');
+    const errorMsg = document.getElementById('errorMsg');
+    const successMsg = document.getElementById('successMsg');
+
+    // Genera bloques dinámicos según la cantidad seleccionada
+    cantidadSelect.addEventListener('change', () => {
+        container.innerHTML = "";
+        const cantidad = parseInt(cantidadSelect.value);
+        for (let i = 1; i <= cantidad; i++) {
+            container.innerHTML += `
+              <div class="beneficiario-block">
+                <h3>Beneficiario ${i}</h3>
+                <label>Documento</label>
+                <input name="doc${i}" type="text" placeholder="Número de documento" required>
+                <label>Nombre completo</label>
+                <input name="nombre${i}" type="text" placeholder="Nombre completo" required>
+                <label>Parentesco</label>
+                <select name="parentesco${i}" required>
+                  <option value="">Seleccione</option>
+                  <option>Cónyuge</option>
+                  <option>Hijo/a</option>
+                  <option>Padre</option>
+                  <option>Madre</option>
+                  <option>Hermano/a</option>
+                  <option>Otro</option>
+                </select>
+                <label>Porcentaje</label>
+                <input name="porcentaje${i}" type="number" placeholder="%" required>
+                <label>Teléfono</label>
+                <input name="telefono${i}" type="tel" placeholder="Teléfono" required>
+              </div>
+            `;
+        }
+    });
+
+    // Validación antes de enviar
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const cedula = document.getElementById('cedulaAsociado').value.trim();
+        const cantidad = parseInt(cantidadSelect.value);
+        let suma = 0;
+
+        for (let i = 1; i <= cantidad; i++) {
+            suma += parseInt(document.querySelector(`[name="porcentaje${i}"]`).value) || 0;
+        }
+
+        if (cedula !== "" && suma === 100) {
+            errorMsg.style.display = "none";
+            successMsg.style.display = "block";
+            // Aquí se enviaría el formulario al backend Flask con fetch/AJAX o directamente con POST
+            form.reset();
+            container.innerHTML = "";
+        } else {
+            successMsg.style.display = "none";
+            errorMsg.style.display = "block";
+        }
+    });
+</script>
+{% endblock %}

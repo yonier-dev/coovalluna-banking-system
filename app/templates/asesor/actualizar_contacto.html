@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+
+<style>
+  body {
+    background: #f4f7fb;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 100vh;
+    margin: 0;
+  }
+
+  .header {
+    background: linear-gradient(90deg, #004c99, #007acc);
+    color: #fff;
+    padding: 20px;
+    text-align: center;
+    font-size: 22px;
+    font-weight: bold;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 10;
+  }
+
+  .logout {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    color: #fff;
+    text-decoration: none;
+    font-size: 14px;
+  }
+
+  .back {
+    position: absolute;
+    top: 20px;
+    left: 30px;
+    color: #fff;
+    text-decoration: none;
+    font-size: 14px;
+  }
+
+  .contacto-box {
+    margin-top: 100px;
+    background: #fff;
+    border: 3px solid #004c99;
+    border-radius: 12px;
+    padding: 30px;
+    width: 600px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  }
+
+  h2 {
+    text-align: center;
+    margin-bottom: 25px;
+    color: #004c99;
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  label {
+    font-weight: bold;
+    color: #004c99;
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  input {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #007acc;
+    border-radius: 8px;
+    font-size: 14px;
+  }
+
+  input:focus {
+    border-color: #004c99;
+    outline: none;
+  }
+
+  .submit-btn {
+    padding: 14px;
+    background: linear-gradient(90deg, #004c99, #007acc);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .submit-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+  }
+
+  .error,
+  .success {
+    font-size: 14px;
+    margin-top: 10px;
+    text-align: center;
+    font-weight: bold;
+    display: none;
+  }
+
+  .error {
+    color: #cc0000;
+  }
+
+  .success {
+    color: green;
+  }
+</style>
+
+<div class="header">
+  Actualización de Datos de Contacto
+  <a href="/asesor/dashboard" class="back">← Volver</a>
+  <a href="/logout" class="logout">Cerrar sesión</a>
+</div>
+
+<div class="contacto-box">
+  <h2>Formulario de Actualización</h2>
+
+  <form id="contactoForm" class="form-grid" method="POST">
+    <div>
+      <label for="cedula">Cédula del Asociado</label>
+      <input id="cedula" name="cedula" type="text" placeholder="Ingrese la cédula" required>
+    </div>
+
+    <div>
+      <label for="telefono">Teléfono</label>
+      <input id="telefono" name="telefono" type="tel" placeholder="Ingrese nuevo teléfono" required>
+    </div>
+
+    <div>
+      <label for="correo">Correo electrónico</label>
+      <input id="correo" name="correo" type="email" placeholder="Ingrese nuevo correo" required>
+    </div>
+
+    <div>
+      <label for="direccion">Dirección</label>
+      <input id="direccion" name="direccion" type="text" placeholder="Ingrese nueva dirección" required>
+    </div>
+
+    <button type="submit" class="submit-btn">Actualizar Datos</button>
+
+    <div id="errorMsg" class="error">⚠️ Todos los campos son obligatorios y la cédula debe estar registrada</div>
+    <div id="successMsg" class="success">✅ Datos actualizados correctamente</div>
+  </form>
+</div>
+
+<script>
+  const form = document.getElementById('contactoForm');
+  const errorMsg = document.getElementById('errorMsg');
+  const successMsg = document.getElementById('successMsg');
+
+  // Simulación de verificación de cédula registrada
+  const cedulasRegistradas = ["123456789", "987654321", "456789123"];
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const cedula = document.getElementById('cedula').value.trim();
+    const telefono = document.getElementById('telefono').value.trim();
+    const correo = document.getElementById('correo').value.trim();
+    const direccion = document.getElementById('direccion').value.trim();
+
+    if (cedula !== "" && telefono !== "" && correo !== "" && direccion !== "" && cedulasRegistradas.includes(cedula)) {
+      errorMsg.style.display = "none";
+      successMsg.style.display = "block";
+      form.reset();
+    } else {
+      successMsg.style.display = "none";
+      errorMsg.style.display = "block";
+    }
+  });
+</script>
+
+{% endblock %}
