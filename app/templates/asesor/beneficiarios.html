@@ -78,6 +78,17 @@
 
 <div class="beneficiarios-box">
     <h2>Formulario de Beneficiarios</h2>
+    {% if error %}
+    <p style="color:red;text-align:center;font-weight:bold;">
+        ⚠️ {{ error }}
+    </p>
+    {% endif %}
+
+    {% if mensaje %}
+    <p style="color:green;text-align:center;font-weight:bold;">
+        ✅ {{ mensaje }}
+    </p>
+    {% endif %}
     <form id="beneficiariosForm" class="form-grid" method="POST">
         <!-- Cédula del asociado -->
         <div>
@@ -109,64 +120,81 @@
 </div>
 
 <script>
-    const cantidadSelect = document.getElementById('cantidad');
-    const container = document.getElementById('beneficiariosContainer');
-    const form = document.getElementById('beneficiariosForm');
-    const errorMsg = document.getElementById('errorMsg');
-    const successMsg = document.getElementById('successMsg');
+const cantidadSelect = document.getElementById('cantidad');
+const container = document.getElementById('beneficiariosContainer');
+const form = document.getElementById('beneficiariosForm');
+const errorMsg = document.getElementById('errorMsg');
+const successMsg = document.getElementById('successMsg');
 
-    // Genera bloques dinámicos según la cantidad seleccionada
-    cantidadSelect.addEventListener('change', () => {
-        container.innerHTML = "";
-        const cantidad = parseInt(cantidadSelect.value);
-        for (let i = 1; i <= cantidad; i++) {
-            container.innerHTML += `
-              <div class="beneficiario-block">
-                <h3>Beneficiario ${i}</h3>
-                <label>Documento</label>
-                <input name="doc${i}" type="text" placeholder="Número de documento" required>
-                <label>Nombre completo</label>
-                <input name="nombre${i}" type="text" placeholder="Nombre completo" required>
-                <label>Parentesco</label>
-                <select name="parentesco${i}" required>
-                  <option value="">Seleccione</option>
-                  <option>Cónyuge</option>
-                  <option>Hijo/a</option>
-                  <option>Padre</option>
-                  <option>Madre</option>
-                  <option>Hermano/a</option>
-                  <option>Otro</option>
-                </select>
-                <label>Porcentaje</label>
-                <input name="porcentaje${i}" type="number" placeholder="%" required>
-                <label>Teléfono</label>
-                <input name="telefono${i}" type="tel" placeholder="Teléfono" required>
-              </div>
-            `;
-        }
-    });
+cantidadSelect.addEventListener('change', () => {
 
-    // Validación antes de enviar
-    form.addEventListener('submit', function(e) {
+    container.innerHTML = "";
+
+    const cantidad = parseInt(cantidadSelect.value);
+
+    for (let i = 1; i <= cantidad; i++) {
+
+        container.innerHTML += `
+        <div class="beneficiario-block">
+
+            <h3>Beneficiario ${i}</h3>
+
+            <label>Documento</label>
+            <input name="doc${i}" type="text" required>
+
+            <label>Nombre completo</label>
+            <input name="nombre${i}" type="text" required>
+
+            <label>Parentesco</label>
+            <select name="parentesco${i}" required>
+                <option value="">Seleccione</option>
+                <option>Cónyuge</option>
+                <option>Hijo/a</option>
+                <option>Padre</option>
+                <option>Madre</option>
+                <option>Hermano/a</option>
+                <option>Otro</option>
+            </select>
+
+            <label>Porcentaje</label>
+            <input name="porcentaje${i}" type="number" min="1" max="100" required>
+
+            <label>Teléfono</label>
+            <input name="telefono${i}" type="text" required>
+
+        </div>
+        `;
+    }
+});
+
+form.addEventListener('submit', function(e) {
+
+    const cedula = document.getElementById('cedulaAsociado').value.trim();
+    const cantidad = parseInt(cantidadSelect.value);
+
+    let suma = 0;
+
+    for (let i = 1; i <= cantidad; i++) {
+
+        suma += parseFloat(
+            document.querySelector(`[name="porcentaje${i}"]`).value
+        ) || 0;
+    }
+
+    if (cedula === "" || suma !== 100) {
+
         e.preventDefault();
-        const cedula = document.getElementById('cedulaAsociado').value.trim();
-        const cantidad = parseInt(cantidadSelect.value);
-        let suma = 0;
 
-        for (let i = 1; i <= cantidad; i++) {
-            suma += parseInt(document.querySelector(`[name="porcentaje${i}"]`).value) || 0;
-        }
+        successMsg.style.display = "none";
+        errorMsg.style.display = "block";
 
-        if (cedula !== "" && suma === 100) {
-            errorMsg.style.display = "none";
-            successMsg.style.display = "block";
-            // Aquí se enviaría el formulario al backend Flask con fetch/AJAX o directamente con POST
-            form.reset();
-            container.innerHTML = "";
-        } else {
-            successMsg.style.display = "none";
-            errorMsg.style.display = "block";
-        }
-    });
+    } else {
+
+        errorMsg.style.display = "none";
+        successMsg.style.display = "none";
+
+        // Flask recibe el POST normalmente
+    }
+});
 </script>
 {% endblock %}
