@@ -617,14 +617,118 @@ def registrar_asociado():
         if conn:
             conn.close()
 
-# NO IMPLEMENTADA
+# IMPLEMENTADA
 @asesor_bp.route('/asesor/apertura-cuenta', methods=['GET', 'POST'])
 def apertura_cuenta():
-    # GET → muestra formulario para abrir cuenta de ahorro.
-    # POST → inserta nueva cuenta vinculada al asociado y agencia del asesor.
-    # El sistema debe generar automáticamente un número único de cuenta.
-    # Solo se permite abrir cuentas para asociados en estado “activo”.
-    return render_template('asesor/apertura_cuenta.html')
+
+    if session.get('perfil') != 'asesor':
+        return redirect(url_for('auth.login'))
+
+    if request.method == 'GET':
+        return render_template('asesor/apertura_cuenta.html')
+
+    conn = None
+    cur = None
+
+    try:
+
+        cedula = request.form.get('cedula')
+        fecha = request.form.get('fecha')
+
+        conn = get_conexion()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        # la agencia del asesor
+        cur.execute("""
+            SELECT CodigoAgencia_fk
+            FROM EMPLEADO
+            WHERE Cedula_pk = %s
+        """, (session['cedula'],))
+
+        asesor = cur.fetchone()
+
+        if not asesor:
+            return render_template(
+                'asesor/apertura_cuenta.html',
+                error='No se encontró la información del asesor'
+            )
+
+        agencia = asesor['codigoagencia_fk']
+
+        # mira si el asociado esta activo y existe para la agencia del asesor
+        cur.execute("""
+            SELECT cedula_pk, estado
+            FROM ASOCIADO
+            WHERE cedula_pk = %s
+        """, (cedula,))
+
+        asociado = cur.fetchone()
+
+        if not asociado:
+            return render_template(
+                'asesor/apertura_cuenta.html',
+                error='El asociado no existe'
+            )
+
+        if asociado['estado'].lower() != 'activo':
+            return render_template(
+                'asesor/apertura_cuenta.html',
+                error='Solo se pueden abrir cuentas a asociados activos'
+            )
+
+        # crea un numero de cuenta unico 
+        import uuid
+
+        numero_cuenta = "CA" + uuid.uuid4().hex[:10].upper()
+
+        cur.execute("""
+            INSERT INTO CUENTA_AHORRO(
+                Numero_pk,
+                CodigoAgencia_fk,
+                cedula_asociado_fk,
+                Fecha_apertura,
+                Estado
+            )
+            VALUES (
+                %s,
+                %s,
+                %s,
+                %s,
+                'ACTIVA'
+            )
+        """, (
+            numero_cuenta,
+            agencia,
+            cedula,
+            fecha
+        ))
+
+        conn.commit()
+
+        return render_template(
+            'asesor/apertura_cuenta.html',
+            mensaje=f'Cuenta creada correctamente. Número: {numero_cuenta}'
+        )
+
+    except Exception as e:
+
+        if conn:
+            conn.rollback()
+
+        print(e)
+
+        return render_template(
+            'asesor/apertura_cuenta.html',
+            error=f'Error: {str(e)}'
+        )
+
+    finally:
+
+        if cur:
+            cur.close()
+
+        if conn:
+            conn.close()
 
 
 # NO IMPLEMENTADA

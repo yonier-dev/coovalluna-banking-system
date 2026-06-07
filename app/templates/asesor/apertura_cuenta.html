@@ -116,7 +116,6 @@
         </div>
         <div>
             <label for="agencia">Agencia</label>
-            <select id="agencia" name="agencia" required>
                 <option value="">Seleccione la agencia</option>
                 <option value="Tuluá">Tuluá</option>
                 <option value="Riofrío">Riofrío</option>
@@ -135,32 +134,4 @@
     </form>
 </div>
 
-<script>
-    const form = document.getElementById('cuentaForm');
-    const errorMsg = document.getElementById('errorMsg');
-    const successMsg = document.getElementById('successMsg');
-    const numCuentaSpan = document.getElementById('numCuenta');
-
-    // Simulación de asociados registrados y activos
-    const asociadosActivos = ["123456789", "987654321", "456789123"];
-
-    form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        const cedula = document.getElementById('cedula').value.trim();
-        const agencia = document.getElementById('agencia').value;
-        const fecha = document.getElementById('fecha').value;
-
-        if (cedula !== "" && asociadosActivos.includes(cedula) && agencia !== "" && fecha !== "") {
-            errorMsg.style.display = "none";
-            successMsg.style.display = "block";
-            // Generar número único de cuenta (simulación)
-            const numCuenta = "CTA-" + Math.floor(Math.random() * 1000000);
-            numCuentaSpan.textContent = numCuenta;
-            form.reset();
-        } else {
-            successMsg.style.display = "none";
-            errorMsg.style.display = "block";
-        }
-    });
-</script>
 {% endblock %}
