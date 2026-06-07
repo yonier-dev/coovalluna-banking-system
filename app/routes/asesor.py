@@ -731,14 +731,138 @@ def apertura_cuenta():
             conn.close()
 
 
-# NO IMPLEMENTADA
+# IMPLEMENTADA
 @asesor_bp.route('/asesor/deposito', methods=['GET', 'POST'])
 def deposito():
-    # GET → muestra formulario para registrar depósito.
-    # POST → inserta movimiento tipo “depósito” con valor, fecha, hora y canal.
-    # El saldo no se guarda como campo fijo, se calcula dinámicamente.
-    # No se pueden eliminar movimientos históricos.
-    return render_template('asesor/deposito.html')
+
+    if session.get('perfil') != 'asesor':
+        return redirect(url_for('auth.login'))
+
+    if request.method == 'GET':
+        return render_template('asesor/deposito.html')
+
+    conn = None
+    cur = None
+
+    try:
+
+        cedula = request.form.get('cedula')
+        numero_cuenta = request.form.get('cuenta')
+        valor = float(request.form.get('valor'))
+        canal = request.form.get('canal')
+
+        if valor <= 0:
+            return render_template(
+                'asesor/deposito.html',
+                error='El valor debe ser mayor que cero'
+            )
+
+        conn = get_conexion()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        # Agencia del asesor
+        cur.execute("""
+            SELECT CodigoAgencia_fk
+            FROM EMPLEADO
+            WHERE Cedula_pk = %s
+        """, (session['cedula'],))
+
+        asesor = cur.fetchone()
+
+        if not asesor:
+            return render_template(
+                'asesor/deposito.html',
+                error='No se encontró el asesor'
+            )
+
+        agencia = asesor['codigoagencia_fk']
+
+        # Verifica la cuenta
+        cur.execute("""
+            SELECT *
+            FROM CUENTA_AHORRO
+            WHERE Numero_pk = %s
+            AND cedula_asociado_fk = %s
+            AND CodigoAgencia_fk = %s
+        """, (
+            numero_cuenta,
+            cedula,
+            agencia
+        ))
+
+        cuenta = cur.fetchone()
+
+        if not cuenta:
+            return render_template(
+                'asesor/deposito.html',
+                error='La cuenta no existe o no pertenece a su agencia'
+            )
+
+        # obtiene el saldo actual de la cuenta a partir del ultimo movimiento registrado
+        cur.execute("""
+            SELECT Saldo
+            FROM MOVIMIENTO
+            WHERE cuenta_a_la_que_pertenece = %s
+            ORDER BY Fecha_Hora DESC
+            LIMIT 1
+        """, (numero_cuenta,))
+
+        ultimo_mov = cur.fetchone()
+
+        saldo_actual = (
+            float(ultimo_mov['saldo'])
+            if ultimo_mov
+            else 0
+        )
+
+        nuevo_saldo = saldo_actual + valor
+
+        # genera un numero de transaccion unico
+        import uuid
+
+        num_transaccion = str(uuid.uuid4())[:20]
+
+        # registra el movimiento
+        cur.execute("""
+            INSERT INTO MOVIMIENTO(
+                num_transaccion_pk,
+                saldo,
+                tipo_movimiento,
+                canal,
+                valor,
+                cuenta_a_la_que_pertenece
+            )
+            VALUES (%s,%s,%s,%s,%s,%s)
+        """, (
+            num_transaccion,
+            nuevo_saldo,
+            'DEPOSITO',
+            canal,
+            valor,
+            numero_cuenta
+        ))
+
+        conn.commit()
+
+        return render_template(
+            'asesor/deposito.html',
+            mensaje=f'Depósito registrado correctamente. Nuevo saldo: ${nuevo_saldo:,.0f}'
+        )
+
+    except Exception as e:
+
+        return render_template(
+            'asesor/deposito.html',
+            error=f'Error: {str(e)}'
+        )
+
+    finally:
+
+        if cur:
+            cur.close()
+
+        if conn:
+            conn.close()
 
 
 # NO IMPLEMENTADA
