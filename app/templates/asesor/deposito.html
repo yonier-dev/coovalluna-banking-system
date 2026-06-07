@@ -141,42 +141,4 @@
     </form>
 </div>
 
-<script>
-    const form = document.getElementById('depositoForm');
-    const errorMsg = document.getElementById('errorMsg');
-    const successMsg = document.getElementById('successMsg');
-    const nuevoSaldoSpan = document.getElementById('nuevoSaldo');
-
-    // Simulación de saldos de cuentas
-    const cuentas = {
-      "10001": 500000,
-      "10002": 200000
-    };
-
-    form.addEventListener('submit', function(e) {
-      e.preventDefault();
-      const cedula = document.getElementById('cedula').value.trim();
-      const cuenta = document.getElementById('cuenta').value.trim();
-      const valor = parseInt(document.getElementById('valor').value);
-      const fecha = document.getElementById('fecha').value;
-      const hora = document.getElementById('hora').value;
-      const canal = document.getElementById('canal').value;
-
-      if (cedula !== "" && cuenta !== "" && valor > 0 && fecha !== "" && hora !== "" && canal !== "") {
-        if (cuentas[cuenta]) {
-          cuentas[cuenta] += valor; // actualizar saldo simulado
-          errorMsg.style.display = "none";
-          successMsg.style.display = "block";
-          nuevoSaldoSpan.textContent = cuentas[cuenta];
-          form.reset();
-        } else {
-          successMsg.style.display = "none";
-          errorMsg.style.display = "block";
-        }
-      } else {
-        successMsg.style.display = "none";
-        errorMsg.style.display = "block";
-      }
-    });
-</script>
 {% endblock %}
