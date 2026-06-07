@@ -132,59 +132,65 @@
 <div class="contacto-box">
   <h2>Formulario de Actualización</h2>
 
-  <form id="contactoForm" class="form-grid" method="POST">
+  {% if error %}
+  <p style="color:#cc0000; text-align:center; font-weight:bold;">
+    ⚠️ {{ error }}
+  </p>
+  {% endif %}
+
+  {% if mensaje %}
+  <p style="color:green; text-align:center; font-weight:bold;">
+    ✅ {{ mensaje }}
+  </p>
+  {% endif %}
+
+  <form class="form-grid" method="POST">
+
     <div>
       <label for="cedula">Cédula del Asociado</label>
-      <input id="cedula" name="cedula" type="text" placeholder="Ingrese la cédula" required>
+      <input
+        id="cedula"
+        name="cedula"
+        type="text"
+        placeholder="Ingrese la cédula"
+        required>
     </div>
 
     <div>
       <label for="telefono">Teléfono</label>
-      <input id="telefono" name="telefono" type="tel" placeholder="Ingrese nuevo teléfono" required>
+      <input
+        id="telefono"
+        name="telefono"
+        type="tel"
+        placeholder="Ingrese nuevo teléfono"
+        required>
     </div>
 
     <div>
       <label for="correo">Correo electrónico</label>
-      <input id="correo" name="correo" type="email" placeholder="Ingrese nuevo correo" required>
+      <input
+        id="correo"
+        name="correo"
+        type="email"
+        placeholder="Ingrese nuevo correo"
+        required>
     </div>
 
     <div>
       <label for="direccion">Dirección</label>
-      <input id="direccion" name="direccion" type="text" placeholder="Ingrese nueva dirección" required>
+      <input
+        id="direccion"
+        name="direccion"
+        type="text"
+        placeholder="Ingrese nueva dirección"
+        required>
     </div>
 
-    <button type="submit" class="submit-btn">Actualizar Datos</button>
+    <button type="submit" class="submit-btn">
+      Actualizar Datos
+    </button>
 
-    <div id="errorMsg" class="error">⚠️ Todos los campos son obligatorios y la cédula debe estar registrada</div>
-    <div id="successMsg" class="success">✅ Datos actualizados correctamente</div>
   </form>
 </div>
-
-<script>
-  const form = document.getElementById('contactoForm');
-  const errorMsg = document.getElementById('errorMsg');
-  const successMsg = document.getElementById('successMsg');
-
-  // Simulación de verificación de cédula registrada
-  const cedulasRegistradas = ["123456789", "987654321", "456789123"];
-
-  form.addEventListener('submit', function (e) {
-    e.preventDefault();
-
-    const cedula = document.getElementById('cedula').value.trim();
-    const telefono = document.getElementById('telefono').value.trim();
-    const correo = document.getElementById('correo').value.trim();
-    const direccion = document.getElementById('direccion').value.trim();
-
-    if (cedula !== "" && telefono !== "" && correo !== "" && direccion !== "" && cedulasRegistradas.includes(cedula)) {
-      errorMsg.style.display = "none";
-      successMsg.style.display = "block";
-      form.reset();
-    } else {
-      successMsg.style.display = "none";
-      errorMsg.style.display = "block";
-    }
-  });
-</script>
 
 {% endblock %}
