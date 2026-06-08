@@ -1,8 +1,10 @@
 {% extends "base.html" %}
 {% block contenido %}
+
 <style>
-   body {
+    body {
         background: #f4f7fb;
+        font-family: sans-serif;
     }
 
     .header {
@@ -15,108 +17,225 @@
         box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     }
 
-    .logout { position: absolute; top: 20px; right: 30px; color: white; text-decoration: none; }
-    .back { position: absolute; top: 20px; left: 30px; color: white; text-decoration: none; }
+    .logout { position: absolute; top: 20px; right: 30px; color: white; text-decoration: none; font-size: 14px; }
+    .back { position: absolute; top: 20px; left: 30px; color: white; text-decoration: none; font-size: 14px; }
 
     .container {
         width: 95%;
         max-width: 1200px;
-        margin: 40px auto;
+        margin: 30px auto;
         background: white;
         border-radius: 12px;
-        padding: 40px;
+        padding: 30px;
         box-shadow: 0 6px 20px rgba(0,0,0,0.15);
         border: 3px solid #004c99;
+        box-sizing: border-box;
     }
 
     h2 {
-        text-align: center;
         color: #004c99;
-        margin-bottom: 10px;
-    }
-
-    .subtitle {
+        margin-top: 0;
+        margin-bottom: 25px;
         text-align: center;
-        color: #555;
-        margin-bottom: 40px;
-        font-size: 16px;
     }
 
-    .grid-reportes {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 25px;
+    /* caja de busqueda en bloques independientes para asegurar el ancho total */
+    .bloque-busqueda {
+        max-width: 500px;
+        margin: 0 auto 30px auto;
     }
 
-    .card-reporte {
-        background: #f8fbff;
-        border: 2px solid #007acc;
-        border-radius: 10px;
-        padding: 25px;
-        text-align: center;
-        text-decoration: none;
-        color: #333;
-        transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        align-items: center;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-    }
-
-    .card-reporte:hover {
-        transform: translateY(-5px);
-        background: #eaf4ff;
-        box-shadow: 0 8px 15px rgba(0,0,0,0.15);
-        border-color: #004c99;
-    }
-
-    .card-reporte .numero {
-        background: #004c99;
-        color: white;
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    .campo label {
+        display: block;
         font-weight: bold;
-        margin-bottom: 15px;
-    }
-
-    .card-reporte h3 {
+        margin-bottom: 8px;
         color: #004c99;
-        margin: 0 0 10px 0;
-        font-size: 18px;
+        text-align: center;
     }
 
-    .card-reporte p {
-        font-size: 14px;
-        color: #666;
-        margin: 0 0 20px 0;
-        line-height: 1.4;
+    .campo input {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #007acc;
+        border-radius: 8px;
+        box-sizing: border-box;
+        font-size: 15px;
+        text-align: center;
     }
 
-    .card-reporte .btn-entrar {
+    .bloque-botones {
+        text-align: center;
+        margin-top: 15px;
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+    }
+
+    .btn {
+        padding: 12px 25px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 15px;
         background: #007acc;
         color: white;
-        padding: 8px 20px;
-        border-radius: 6px;
+        transition: all 0.2s ease;
+    }
+
+    .btn:hover:not(:disabled) {
+        background: #004c99;
+        transform: translateY(-2px);
+    }
+
+    .btn:disabled {
+        background: #cccccc;
+        color: #666666;
+        cursor: not-allowed;
+    }
+
+    .btn-exportar { background: #28a745; }
+    .btn-exportar:hover:not(:disabled) { background: #218838; }
+
+    .kpi-container {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        margin-bottom: 35px;
+    }
+
+    .kpi-card {
+        border: 2px solid #007acc;
+        background: #f8fbff;
+        border-radius: 10px;
+        padding: 15px;
+        text-align: center;
+    }
+
+    .kpi-card h3 {
+        margin: 0 0 8px 0;
+        color: #555;
+        font-size: 15px;
+    }
+
+    .kpi-card .valor {
+        font-size: 22px;
         font-weight: bold;
+        color: #004c99;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th {
+        background: #004c99;
+        color: white;
+        padding: 14px;
+        border: 1px solid #007acc;
+        font-size: 15px;
+    }
+
+    td {
+        padding: 12px;
+        border: 1px solid #007acc;
+        text-align: center;
         font-size: 14px;
     }
+
+    tr:nth-child(even) { background: #f8fbff; }
+    tr:hover { background: #eaf4ff; }
+
+    .alert {
+        padding: 12px;
+        border-radius: 8px;
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .alert-error { background: #ffe6e6; color: #cc0000; border: 1px solid #cc0000; }
 </style>
+
 <div class="header">
-    Reporte 7: Consolidado de Codeudores y Garantías Personales
-    <a href="/admin/reportes" class="back">← Cambiar Reporte</a>
+    Reporte: Certificado de Codeudoria Activa
+    <a href="/admin/reportes" class="back">← Volver a Reportes</a>
+    <a href="/logout" class="logout">Cerrar sesión</a>
 </div>
+
 <div class="container">
-    <h2>Obligaciones Respaldadas por Terceros</h2>
+    <h2>Garantias y Obligaciones Respaldadas</h2>
+
+    {% if error %}
+        <div class="alert alert-error">⚠️ {{ error }}</div>
+    {% endif %}
+
+    <form method="GET" action="/admin/reportes/codeudoria-activa">
+        <div class="bloque-busqueda">
+            <div class="campo">
+                <label for="cedula_codeudor">Cedula del Asociado Codeudor (*)</label>
+                <input type="text" id="cedula_codeudor" name="cedula_codeudor" placeholder="Ingrese numero de documento" value="{{ cedula_codeudor }}" required>
+            </div>
+            
+            <div class="bloque-botones">
+                <button type="submit" class="btn">Consultar Amparos</button>
+            </div>
+        </div>
+    </form>
+
+    <div class="kpi-container">
+        <div class="kpi-card">
+            <h3>Creditos Garantizados Activos</h3>
+            <div class="valor">{{ resumen.total_respaldados }}</div>
+        </div>
+        <div class="kpi-card">
+            <h3>Monto Total bajo Responsabilidad</h3>
+            <div class="valor" style="color: #004c99;">${{ "%.2f"|format(resumen.monto_total_garantizado) }}</div>
+        </div>
+    </div>
+
     <table>
         <thead>
-            <tr><th>Cédula Titular</th><th>Nombre Titular</th><th>Datos Codeudor</th><th>Valor Obligación</th><th>Firma Pagaré</th><th>Estado Actual</th></tr>
+            <tr>
+                <th>Radicado del Credito</th>
+                <th>Linea de Credito</th>
+                <th>Monto Inicial Aprobado</th>
+                <th>Cedula Deudor Principal</th>
+                <th>Nombre Deudor Principal</th>
+                <th>Estado Obligacion</th>
+            </tr>
         </thead>
-        <tbody><tr><td colspan="6">No se registran créditos activos acoplados a codeudores solventes</td></tr></tbody>
+        <tbody>
+            {% if respaldos_lista %}
+                {% for item in respaldos_lista %}
+                <tr>
+                    <td><strong>{{ item.num_radicado_pk }}</strong></td>
+                    <td>{{ item.linea_credito }}</td>
+                    <td style="font-weight: bold; color: #004c99;">
+                        ${{ "%.2f"|format(item.valor_aprovado|float) }}
+                    </td>
+                    <td>{{ item.cedula_deudor }}</td>
+                    <td style="text-align: left;">{{ item.apellido_deudor }}, {{ item.nombre_deudor }}</td>
+                    <td>
+                        <span style="color: green; font-weight: bold;">
+                            {{ item.estado }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="6" style="color: #666; padding: 25px;">
+                        {% if busqueda_realizada %}
+                            El asociado ingresado no figura como codeudor activo de ninguna obligacion vigente.
+                        {% else %}
+                            Ingrese la cedula del asociado arriba y presione "Consultar Amparos".
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endif %}
+        </tbody>
     </table>
 </div>
+
 {% endblock %}

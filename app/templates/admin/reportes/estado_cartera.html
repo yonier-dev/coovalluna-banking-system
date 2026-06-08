@@ -1,8 +1,10 @@
 {% extends "base.html" %}
 {% block contenido %}
+
 <style>
-   body {
+    body {
         background: #f4f7fb;
+        font-family: sans-serif;
     }
 
     .header {
@@ -15,116 +17,242 @@
         box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     }
 
-    .logout { position: absolute; top: 20px; right: 30px; color: white; text-decoration: none; }
-    .back { position: absolute; top: 20px; left: 30px; color: white; text-decoration: none; }
+    .logout { position: absolute; top: 20px; right: 30px; color: white; text-decoration: none; font-size: 14px; }
+    .back { position: absolute; top: 20px; left: 30px; color: white; text-decoration: none; font-size: 14px; }
 
     .container {
         width: 95%;
         max-width: 1200px;
-        margin: 40px auto;
+        margin: 30px auto;
         background: white;
         border-radius: 12px;
-        padding: 40px;
+        padding: 30px;
         box-shadow: 0 6px 20px rgba(0,0,0,0.15);
         border: 3px solid #004c99;
+        box-sizing: border-box;
     }
 
     h2 {
-        text-align: center;
         color: #004c99;
-        margin-bottom: 10px;
+        margin-top: 0;
+        margin-bottom: 25px;
+        text-align: center;
     }
 
-    .subtitle {
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        margin-bottom: 25px;
+    }
+
+    .campo label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 8px;
+        color: #004c99;
+    }
+
+    .campo input, .campo select {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #007acc;
+        border-radius: 8px;
+        box-sizing: border-box;
+        font-size: 15px;
+        background: white;
+    }
+
+    .botones {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-bottom: 35px;
+    }
+
+    .btn {
+        padding: 12px 25px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 15px;
+        background: #007acc;
+        color: white;
+        transition: all 0.2s ease;
+    }
+
+    .btn:hover:not(:disabled) {
+        background: #004c99;
+        transform: translateY(-2px);
+    }
+
+    .btn:disabled {
+        background: #cccccc;
+        color: #666666;
+        cursor: not-allowed;
+    }
+
+    .btn-exportar { background: #28a745; }
+    .btn-exportar:hover:not(:disabled) { background: #218838; }
+
+    /* Indicadores KPI superiores en fila */
+    .kpi-container {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        margin-bottom: 35px;
+    }
+
+    .kpi-card {
+        border: 2px solid #007acc;
+        background: #f8fbff;
+        border-radius: 10px;
+        padding: 20px;
         text-align: center;
+    }
+
+    .kpi-card h3 {
+        margin: 0 0 10px 0;
         color: #555;
-        margin-bottom: 40px;
         font-size: 16px;
     }
 
-    .grid-reportes {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 25px;
+    .kpi-card .valor {
+        font-size: 24px;
+        font-weight: bold;
+        color: #004c99;
     }
 
-    .card-reporte {
-        background: #f8fbff;
-        border: 2px solid #007acc;
-        border-radius: 10px;
-        padding: 25px;
-        text-align: center;
-        text-decoration: none;
-        color: #333;
-        transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        align-items: center;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    table {
+        width: 100%;
+        border-collapse: collapse;
     }
 
-    .card-reporte:hover {
-        transform: translateY(-5px);
-        background: #eaf4ff;
-        box-shadow: 0 8px 15px rgba(0,0,0,0.15);
-        border-color: #004c99;
-    }
-
-    .card-reporte .numero {
+    th {
         background: #004c99;
         color: white;
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        margin-bottom: 15px;
+        padding: 14px;
+        border: 1px solid #007acc;
+        font-size: 15px;
     }
 
-    .card-reporte h3 {
-        color: #004c99;
-        margin: 0 0 10px 0;
-        font-size: 18px;
-    }
-
-    .card-reporte p {
-        font-size: 14px;
-        color: #666;
-        margin: 0 0 20px 0;
-        line-height: 1.4;
-    }
-
-    .card-reporte .btn-entrar {
-        background: #007acc;
-        color: white;
-        padding: 8px 20px;
-        border-radius: 6px;
-        font-weight: bold;
+    td {
+        padding: 12px;
+        border: 1px solid #007acc;
+        text-align: center;
         font-size: 14px;
     }
+
+    tr:nth-child(even) { background: #f8fbff; }
+    tr:hover { background: #eaf4ff; }
+
+    .alert {
+        padding: 12px;
+        border-radius: 8px;
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .alert-error { background: #ffe6e6; color: #cc0000; border: 1px solid #cc0000; }
 </style>
+
 <div class="header">
-    Reporte 3: Estado de Cartera por Línea y Estado
-    <a href="/admin/reportes" class="back">← Cambiar Reporte</a>
+    Reporte: Estado de Cartera por Línea y Estado
+    <a href="/admin/reportes" class="back">← Volver a Reportes</a>
+    <a href="/logout" class="logout">Cerrar sesión</a>
 </div>
+
 <div class="container">
-    <h2>Filtros Consolidados</h2>
-    <form method="GET">
-        <div class="form-grid" style="grid-template-columns: repeat(3, 1fr);">
-            <div class="campo"><label>Agencia Operadora</label><select name="agencia"><option value="">Consolidado Nacional</option></select></div>
-            <div class="campo"><label>Aprobados Desde</label><input type="date" name="fecha_desde"></div>
-            <div class="campo"><label>Aprobados Hasta</label><input type="date" name="fecha_hasta"></div>
+    <h2>Estructura y Consolidación de Cartera</h2>
+
+    {% if error %}
+        <div class="alert alert-error">⚠️ {{ error }}</div>
+    {% endif %}
+
+    <form method="GET" action="/admin/reportes/estado-cartera">
+        <div class="form-grid">
+            <div class="campo">
+                <label for="agencia">Agencia Origen</label>
+                <select id="agencia" name="agencia">
+                    <option value="">-- Consolidado Nacional --</option>
+                    {% for ag in lista_agencias %}
+                        <option value="{{ ag.codigo_pk }}" {% if filtro_agencia == ag.codigo_pk %}selected{% endif %}>
+                            {{ ag.nombre }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="campo">
+                <label for="fecha_desde">Aprobados Desde</label>
+                <input type="date" id="fecha_desde" name="fecha_desde" value="{{ fecha_desde }}">
+            </div>
+
+            <div class="campo">
+                <label for="fecha_hasta">Aprobados Hasta</label>
+                <input type="date" id="fecha_hasta" name="fecha_hasta" value="{{ fecha_hasta }}">
+            </div>
         </div>
-        <div class="botones"><button type="submit" class="btn">Agrupar Cartera</button></div>
+
+        <div class="botones">
+            <button type="submit" class="btn">Agrupar Cartera</button>
+        </div>
     </form>
+
+    <div class="kpi-container">
+        <div class="kpi-card">
+            <h3>Total Obligaciones en Grupo</h3>
+            <div class="valor">{{ resumen.total_creditos }}</div>
+        </div>
+        <div class="kpi-card">
+            <h3>Valor Total de Cartera Colocada</h3>
+            <div class="valor">${{ "%.2f"|format(resumen.monto_total_cartera) }}</div>
+        </div>
+    </div>
+
     <table>
         <thead>
-            <tr><th>Línea de Crédito</th><th>Estado de Crédito</th><th>Créditos Vigentes</th><th>Valor Total Aprobado</th><th>% Participación Cartera</th></tr>
+            <tr>
+                <th>Línea de Crédito</th>
+                <th>Estado del Crédito</th>
+                <th>Cantidad de Créditos</th>
+                <th>Monto Total Aprobado</th>
+                <th>% Participación Cartera</th>
+            </tr>
         </thead>
-        <tbody><tr><td colspan="5">No se registran colocaciones en el rango de fechas seleccionado</td></tr></tbody>
+        <tbody>
+            {% if cartera %}
+                {% for item in cartera %}
+                <tr>
+                    <td style="text-align: left; padding-left: 20px;"><strong>{{ item.linea_credito if item.linea_credito else 'SIN LINEA ASIGNADA' }}</strong></td>
+                    <td>
+                        <span style="font-weight: bold;">{{ item.estado }}</span>
+                    </td>
+                    <td>{{ item.numero_creditos }}</td>
+                    <td style="color: #004c99; font-weight: bold;">
+                        ${{ "%.2f"|format(item.total_aprobado|float) }}
+                    </td>
+                    <td>
+                        <span style="background: #eaf4ff; color: #004c99; padding: 4px 10px; border-radius: 15px; font-weight: bold;">
+                            {{ "%.2f"|format(item.porcentaje|float) }}%
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="5" style="color: #666; padding: 25px;">
+                        {% if busqueda_realizada %}
+                            No se registran colocaciones o solicitudes que cumplan con los parámetros establecidos.
+                        {% else %}
+                            Haga clic en "Agrupar Cartera" para procesar el balance actual.
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endif %}
+        </tbody>
     </table>
 </div>
+
 {% endblock %}

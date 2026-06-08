@@ -1,8 +1,10 @@
 {% extends "base.html" %}
 {% block contenido %}
+
 <style>
-   body {
+    body {
         background: #f4f7fb;
+        font-family: sans-serif;
     }
 
     .header {
@@ -15,116 +17,240 @@
         box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     }
 
-    .logout { position: absolute; top: 20px; right: 30px; color: white; text-decoration: none; }
-    .back { position: absolute; top: 20px; left: 30px; color: white; text-decoration: none; }
+    .logout { position: absolute; top: 20px; right: 30px; color: white; text-decoration: none; font-size: 14px; }
+    .back { position: absolute; top: 20px; left: 30px; color: white; text-decoration: none; font-size: 14px; }
 
     .container {
         width: 95%;
         max-width: 1200px;
-        margin: 40px auto;
+        margin: 30px auto;
         background: white;
         border-radius: 12px;
-        padding: 40px;
+        padding: 30px;
         box-shadow: 0 6px 20px rgba(0,0,0,0.15);
         border: 3px solid #004c99;
+        box-sizing: border-box;
     }
 
     h2 {
-        text-align: center;
         color: #004c99;
-        margin-bottom: 10px;
-    }
-
-    .subtitle {
+        margin-top: 0;
+        margin-bottom: 25px;
         text-align: center;
-        color: #555;
-        margin-bottom: 40px;
-        font-size: 16px;
     }
 
-    .grid-reportes {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 25px;
+    /* contenedor en bloques separados para evitar colapso de inputs */
+    .filtro-bloque {
+        max-width: 500px;
+        margin: 0 auto 30px auto;
     }
 
-    .card-reporte {
-        background: #f8fbff;
-        border: 2px solid #007acc;
-        border-radius: 10px;
-        padding: 25px;
-        text-align: center;
-        text-decoration: none;
-        color: #333;
-        transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        align-items: center;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-    }
-
-    .card-reporte:hover {
-        transform: translateY(-5px);
-        background: #eaf4ff;
-        box-shadow: 0 8px 15px rgba(0,0,0,0.15);
-        border-color: #004c99;
-    }
-
-    .card-reporte .numero {
-        background: #004c99;
-        color: white;
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    .campo label {
+        display: block;
         font-weight: bold;
-        margin-bottom: 15px;
-    }
-
-    .card-reporte h3 {
+        margin-bottom: 8px;
         color: #004c99;
-        margin: 0 0 10px 0;
-        font-size: 18px;
+        text-align: center;
     }
 
-    .card-reporte p {
-        font-size: 14px;
-        color: #666;
-        margin: 0 0 20px 0;
-        line-height: 1.4;
+    .campo select {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #007acc;
+        border-radius: 8px;
+        box-sizing: border-box;
+        font-size: 15px;
+        background: white;
+        text-align: center;
     }
 
-    .card-reporte .btn-entrar {
+    .botones-grupo {
+        text-align: center;
+        margin-top: 15px;
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+    }
+
+    .btn {
+        padding: 12px 25px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 15px;
         background: #007acc;
         color: white;
-        padding: 8px 20px;
-        border-radius: 6px;
+        transition: all 0.2s ease;
+    }
+
+    .btn:hover:not(:disabled) {
+        background: #004c99;
+        transform: translateY(-2px);
+    }
+
+    .btn:disabled {
+        background: #cccccc;
+        color: #666666;
+        cursor: not-allowed;
+    }
+
+    .btn-exportar { background: #28a745; }
+    .btn-exportar:hover:not(:disabled) { background: #218838; }
+
+    /* clases estables para rendimiento */
+    .alto-rendimiento { background: #e2fbe8; color: #155724; font-weight: bold; }
+    .normal-rendimiento { color: #333333; }
+
+    .kpi-container {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        margin-bottom: 35px;
+    }
+
+    .kpi-card {
+        border: 2px solid #007acc;
+        background: #f8fbff;
+        border-radius: 10px;
+        padding: 15px;
+        text-align: center;
+    }
+
+    .kpi-card h3 {
+        margin: 0 0 8px 0;
+        color: #555;
+        font-size: 15px;
+    }
+
+    .kpi-card .valor {
+        font-size: 22px;
         font-weight: bold;
+        color: #004c99;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th {
+        background: #004c99;
+        color: white;
+        padding: 14px;
+        border: 1px solid #007acc;
+        font-size: 15px;
+    }
+
+    td {
+        padding: 12px;
+        border: 1px solid #007acc;
+        text-align: center;
         font-size: 14px;
     }
+
+    tr:nth-child(even) { background: #f8fbff; }
+    tr:hover { background: #eaf4ff; }
+
+    .alert {
+        padding: 12px;
+        border-radius: 8px;
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .alert-error { background: #ffe6e6; color: #cc0000; border: 1px solid #cc0000; }
 </style>
+
 <div class="header">
-    Reporte 6: Productividad de Asesores Comerciales
-    <a href="/admin/reportes" class="back">← Cambiar Reporte</a>
+    Reporte: Productividad y Gestion de Asesores
+    <a href="/admin/reportes" class="back">← Volver a Reportes</a>
+    <a href="/logout" class="logout">Cerrar sesión</a>
 </div>
+
 <div class="container">
-    <h2>Métricas de Rendimiento Personal</h2>
-    <form method="GET">
-        <div class="form-grid" style="grid-template-columns: repeat(3, 1fr);">
-            <div class="campo"><label>Rango Inicial</label><input type="date" name="inicio" required></div>
-            <div class="campo"><label>Rango Final</label><input type="date" name="fin" required></div>
-            <div class="campo"><label>Agencia</label><select name="agencia"><option value="">Filtrar Agencia</option></select></div>
+    <h2>Evaluacion de Desempeño Laboral</h2>
+
+    {% if error %}
+        <div class="alert alert-error">⚠️ {{ error }}</div>
+    {% endif %}
+
+    <form method="GET" action="/admin/reportes/productividad-asesores">
+        <div class="filtro-bloque">
+            <div class="campo">
+                <label for="mes_busqueda">Filtrar por Mes de Atencion</label>
+                <select id="mes_busqueda" name="mes_busqueda">
+                    <option value="">-- Todos los Meses Válidos --</option>
+                    <option value="1" {% if filtro_mes == '1' %}selected{% endif %}>Enero</option>
+                    <option value="2" {% if filtro_mes == '2' %}selected{% endif %}>Febrero</option>
+                    <option value="3" {% if filtro_mes == '3' %}selected{% endif %}>Marzo</option>
+                    <option value="4" {% if filtro_mes == '4' %}selected{% endif %}>Abril</option>
+                    <option value="5" {% if filtro_mes == '5' %}selected{% endif %}>Mayo</option>
+                    <option value="6" {% if filtro_mes == '6' %}selected{% endif %}>Junio</option>
+                    <option value="7" {% if filtro_mes == '7' %}selected{% endif %}>Julio</option>
+                    <option value="8" {% if filtro_mes == '8' %}selected{% endif %}>Agosto</option>
+                    <option value="9" {% if filtro_mes == '9' %}selected{% endif %}>Septiembre</option>
+                    <option value="10" {% if filtro_mes == '10' %}selected{% endif %}>Octubre</option>
+                    <option value="11" {% if filtro_mes == '11' %}selected{% endif %}>Noviembre</option>
+                    <option value="12" {% if filtro_mes == '12' %}selected{% endif %}>Diciembre</option>
+                </select>
+            </div>
+            
+            <div class="botones-grupo">
+                <button type="submit" class="btn">Calcular Rendimiento</button>
+            </div>
         </div>
-        <div class="botones"><button type="submit" class="btn">Calcular Indicadores</button></div>
     </form>
+
+    <div class="kpi-container">
+        <div class="kpi-card">
+            <h3>Asesores Evaluados</h3>
+            <div class="valor">{{ resumen.total_asesores }}</div>
+        </div>
+        <div class="kpi-card">
+            <h3>Total Interacciones / Atenciones</h3>
+            <div class="valor" style="color: #28a745;">{{ resumen.total_atenciones }}</div>
+        </div>
+    </div>
+
     <table>
         <thead>
-            <tr><th>Asesor</th><th>Asociados Atendidos</th><th>Créditos Radicados</th><th>Monto Total Aprobado</th><th>Cuentas Abiertas</th></tr>
+            <tr>
+                <th>Cedula Funcionario</th>
+                <th>Nombre Completo</th>
+                <th>Correo Corporativo</th>
+                <th>Estado Laboral</th>
+                <th>Asociados Atendidos</th>
+            </tr>
         </thead>
-        <tbody><tr><td colspan="5">Defina un período de tiempo para calcular los KPI de colocación</td></tr></tbody>
+        <tbody>
+            {% if asesores_lista %}
+                {% for emp in asesores_lista %}
+                <tr class="{{ 'alto-rendimiento' if emp.total_atendidos >= 10 else 'normal-rendimiento' }}">
+                    <td><strong>{{ emp.cedula_pk }}</strong></td>
+                    <td style="text-align: left;">{{ emp.apellido_emp }}, {{ emp.nombre_emp }}</td>
+                    <td>{{ emp.correo_corp if emp.correo_corp else 'No registra' }}</td>
+                    <td>{{ emp.estado_laboral if emp.estado_laboral else 'ACTIVO' }}</td>
+                    <td>
+                        <span style="font-size: 15px; font-weight: bold;">
+                            {{ emp.total_atendidos }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="5" style="color: #666; padding: 25px;">
+                        {% if busqueda_realizada %}
+                            No se encontraron registros de gestion para el mes indicado.
+                        {% else %}
+                            Seleccione un parametro mensual y haga clic en "Calcular Rendimiento".
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endif %}
+        </tbody>
     </table>
 </div>
+
 {% endblock %}
