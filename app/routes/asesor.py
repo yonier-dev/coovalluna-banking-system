@@ -1429,11 +1429,113 @@ def solicitud_credito():
 # NO IMPLEMENTADA
 @asesor_bp.route('/asesor/pago-cuota', methods=['GET', 'POST'])
 def pago_cuota():
-    # GET → muestra formulario con créditos activos.
-    # POST → registra número de cuota, fecha de pago y valor pagado.
-    # Si la fecha de pago es posterior al vencimiento, marcar como “pagado con mora”.
-    # Actualizar el estado general del crédito si todas las cuotas están pagadas.
-    return render_template('asesor/pago_cuota.html')
+
+    if session.get('perfil') != 'asesor':
+        return redirect(url_for('auth.login'))
+
+    if request.method == 'GET':
+        return render_template('asesor/pago_cuota.html')
+
+    conn = None
+    cur = None
+
+    try:
+        cedula = request.form['cedula']
+        credito = request.form['credito']
+        cuota = int(request.form['cuota'])
+        valor = float(request.form['valor'])
+        fecha_pago = request.form['fecha']
+        estado = request.form['estado']
+
+        conn = get_conexion()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        # 1. Buscar la cuota existente
+        cur.execute("""
+            SELECT *
+            FROM CUOTAS
+            WHERE Num_radicado_fk = %s
+            AND Num_cuota = %s
+        """, (credito, cuota))
+
+        cuota_db = cur.fetchone()
+
+        if not cuota_db:
+            return render_template(
+                'asesor/pago_cuota.html',
+                error="La cuota no existe para este crédito"
+            )
+
+        # 2. Actualizar cuota
+        cur.execute("""
+            UPDATE CUOTAS
+            SET Valor_pagado = %s,
+                Fech_pago = %s,
+                Estado_pago = %s
+            WHERE Num_radicado_fk = %s
+            AND Num_cuota = %s
+        """, (
+            valor,
+            fecha_pago,
+            estado,
+            credito,
+            cuota
+        ))
+
+        # 3. Si no está pagada → marcar mora
+        if estado.lower() != "pagada":
+            cur.execute("""
+                UPDATE CUOTAS
+                SET Estado_pago = 'Mora'
+                WHERE Num_radicado_fk = %s
+                AND Num_cuota = %s
+            """, (credito, cuota))
+
+        # 4. Verificar si todas las cuotas están pagadas
+        cur.execute("""
+            SELECT COUNT(*) AS pendientes
+            FROM CUOTAS
+            WHERE Num_radicado_fk = %s
+            AND Estado_pago != 'Pagada'
+        """, (credito,))
+
+        pendientes = cur.fetchone()['pendientes']
+
+        if pendientes == 0:
+            cur.execute("""
+                UPDATE CREDITO
+                SET Estado = 'PAGADO'
+                WHERE Num_radicado_pk = %s
+            """, (credito,))
+
+        conn.commit()
+
+        print("\n==============================")
+        print("PAGO DE CUOTA REGISTRADO")
+        print("Crédito:", credito)
+        print("Cuota:", cuota)
+        print("Valor:", valor)
+        print("Estado:", estado)
+        print("==============================\n")
+
+        return render_template(
+            'asesor/pago_cuota.html',
+            mensaje="Pago registrado correctamente"
+        )
+
+    except Exception as e:
+        print("ERROR PAGO CUOTA:", e)
+
+        return render_template(
+            'asesor/pago_cuota.html',
+            error=str(e)
+        )
+
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
 
 
 # NO IMPLEMENTADA
