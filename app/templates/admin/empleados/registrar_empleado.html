@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+{% block contenido %}
+
+<style>
+    body {
+        background: #f4f7fb;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        min-height: 100vh;
+        margin: 0;
+    }
+
+    .header {
+        background: linear-gradient(90deg, #004c99, #007acc);
+        color: white;
+        padding: 20px;
+        text-align: center;
+        font-size: 22px;
+        font-weight: bold;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        box-sizing: border-box;
+        width: 100%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 10;
+    }
+
+    .logout { position: absolute; top: 20px; right: 30px; color: white; text-decoration: none; font-size: 14px; }
+    .back { position: absolute; top: 20px; left: 30px; color: white; text-decoration: none; font-size: 14px; }
+
+    .container {
+        margin-top: 100px;
+        margin-bottom: 30px;
+        width: 95%;
+        max-width: 700px;
+        box-sizing: border-box;
+    }
+
+    .card-panel {
+        background: white;
+        border: 3px solid #004c99;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    }
+
+    h2 {
+        text-align: center;
+        color: #004c99;
+        margin-top: 0;
+        margin-bottom: 25px;
+    }
+
+    .row {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+
+    .col {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    label {
+        font-weight: bold;
+        color: #004c99;
+    }
+
+    input, select {
+        padding: 12px;
+        border: 2px solid #007acc;
+        border-radius: 8px;
+        font-size: 15px;
+        box-sizing: border-box;
+        width: 100%;
+    }
+
+    input:focus, select:focus {
+        border-color: #004c99;
+        outline: none;
+    }
+
+    .btn-submit {
+        background: #00875a !important;
+        width: 100%;
+        padding: 14px;
+        font-size: 16px;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background 0.2s;
+        margin-top: 15px;
+    }
+
+    .btn-submit:hover { background: #006644 !important; }
+
+    .alert {
+        padding: 12px;
+        border-radius: 8px;
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .alert-error { background: #ffe6e6; color: #cc0000; border: 1px solid #cc0000; }
+    .alert-success { background: #e6ffa0; color: #006600; border: 1px solid #006600; }
+</style>
+
+<div class="header">
+    Registrar Empleado
+    <a href="/admin/gestion-empleados" class="back">← Volver</a>
+    <a href="/logout" class="logout">Cerrar sesión</a>
+</div>
+
+<div class="container">
+
+    {% if error %}
+        <div class="alert alert-error">⚠️ {{ error }}</div>
+    {% endif %}
+
+    {% if mensaje %}
+        <div class="alert alert-success">✅ {{ mensaje }}</div>
+    {% endif %}
+
+    <div class="card-panel">
+        <h2>Registrar Nuevo Empleado</h2>
+        
+        <form method="POST" action="{{ url_for('admin.registrar_empleado') }}">
+            
+            <div class="row">
+                <div class="col">
+                    <label for="cedula">Cédula de Ciudadanía*</label>
+                    <input id="cedula" name="cedula" type="text" placeholder="Ej: 1000007" required>
+                </div>
+                <div class="col">
+                    <label for="tipo_labor">Perfil del Sistema*</label>
+                    <select id="tipo_labor" name="tipo_labor" required>
+                        <option value="asesor" selected>Asesor</option>
+                        <option value="admin">Administrador</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col">
+                    <label for="nombres">Nombres*</label>
+                    <input id="nombres" name="nombres" type="text" placeholder="Ej: Luis Alberto" required>
+                </div>
+                <div class="col">
+                    <label for="apellidos">Apellidos*</label>
+                    <input id="apellidos" name="apellidos" type="text" placeholder="Ej: Restrepo" required>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col">
+                    <label for="correo">Correo Corporativo*</label>
+                    <input id="correo" name="correo" type="email" placeholder="ejemplo@coovalluna.com" required>
+                </div>
+                <div class="col">
+                    <label for="salario">Salario Base ($)*</label>
+                    <input id="salario" name="salario" type="number" step="0.01" placeholder="Ej: 2200000" required>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col">
+                    <label for="codigo_agencia_fk">Agencia de Asignación*</label>
+                    <select id="codigo_agencia_fk" name="codigo_agencia_fk" required>
+                        <option value="" disabled selected>-- Seleccione Sede --</option>
+                        {% for agencia in agencias %}
+                            <option value="{{ agencia.codigo_pk }}">{{ agencia.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col">
+                    <label for="cod_cargo_fk">Cargo Asignado*</label>
+                    <select id="cod_cargo_fk" name="cod_cargo_fk" required>
+                        <option value="" disabled selected>-- Seleccione Rol --</option>
+                        {% for cargo in cargos %}
+                            <option value="{{ cargo.cod_cargo_pk }}">{{ cargo.Nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-submit">Registrar</button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

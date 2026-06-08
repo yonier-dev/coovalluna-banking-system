@@ -1,0 +1,287 @@
+{% extends "base.html" %}
+{% block contenido %}
+
+<style>
+    body {
+        background: #f4f7fb;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        min-height: 100vh;
+        margin: 0;
+    }
+
+    .header {
+        background: linear-gradient(90deg, #004c99, #007acc);
+        color: white;
+        padding: 20px;
+        text-align: center;
+        font-size: 22px;
+        font-weight: bold;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        box-sizing: border-box;
+        width: 100%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 10;
+    }
+
+    .logout { position: absolute; top: 20px; right: 30px; color: white; text-decoration: none; font-size: 14px; }
+    .back { position: absolute; top: 20px; left: 30px; color: white; text-decoration: none; font-size: 14px; }
+
+    .container {
+        margin-top: 100px;
+        margin-bottom: 30px;
+        width: 90%;
+        max-width: 700px;
+        box-sizing: border-box;
+    }
+
+    .search-box, .result-box {
+        background: white;
+        border: 3px solid #004c99;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        margin-bottom: 25px;
+    }
+
+    h2, h3 {
+        text-align: center;
+        color: #004c99;
+        margin-top: 0;
+        margin-bottom: 20px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 15px;
+    }
+
+    label {
+        font-weight: bold;
+        color: #004c99;
+    }
+
+    /* === AQUÍ ESTÁ EL ARREGLO PARA QUE NO SE APEÑUSTQUE === */
+    .search-input-group {
+        display: flex !important;
+        gap: 15px !important;
+        width: 100% !important;
+        align-items: center !important;
+        box-sizing: border-box !important;
+    }
+
+    .search-input-group input {
+        flex: 4 !important; /* Le da el 80% del ancho disponible al campo de texto */
+        padding: 12px !important;
+        border: 2px solid #007acc !important;
+        border-radius: 8px !important;
+        font-size: 15px !important;
+        box-sizing: border-box !important;
+        min-width: 0 !important; /* Evita que el navegador colapse el input */
+    }
+
+    .search-input-group input:focus {
+        border-color: #004c99 !important;
+        outline: none !important;
+    }
+
+    .search-input-group .btn {
+        flex: 1 !important; /* El botón solo ocupa el 20% restante */
+        padding: 12px 20px !important;
+        background: linear-gradient(90deg, #004c99, #007acc) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 8px !important;
+        font-size: 15px !important;
+        cursor: pointer !important;
+        font-weight: bold !important;
+        white-space: nowrap !important; /* Evita que el texto "Buscar" se divida */
+        transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+    }
+
+    .search-input-group .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+
+    /* =================================================== */
+
+    .btn-secondary {
+        background: #6c757d;
+        display: inline-block;
+        text-decoration: none;
+        text-align: center;
+        margin-top: 15px;
+        padding: 12px 25px;
+        color: white;
+        border-radius: 8px;
+        font-weight: bold;
+    }
+
+    .btn-secondary:hover {
+        background: #5a6268;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+
+    .info-item {
+        border-bottom: 1px solid #e2e8f0;
+        padding-bottom: 8px;
+    }
+
+    .info-item .item-label {
+        font-size: 12px;
+        color: #718096;
+        text-transform: uppercase;
+        font-weight: bold;
+        margin-bottom: 4px;
+    }
+
+    .info-item .item-value {
+        font-size: 16px;
+        color: #2d3748;
+        font-weight: 500;
+    }
+
+    .full-width {
+        grid-column: span 2;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+
+    .status-activo { background: #e6fffa; color: #047481; }
+    .status-bloqueado { background: #ffe6e6; color: #cc0000; }
+
+    .alert {
+        padding: 12px;
+        border-radius: 8px;
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .alert-error {
+        background: #ffe6e6;
+        color: #cc0000;
+        border: 1px solid #cc0000;
+    }
+</style>
+
+<div class="header">
+    Búsqueda de Empleados
+    <a href="/admin/gestion-empleados" class="back">← Volver</a>
+    <a href="/logout" class="logout">Cerrar sesión</a>
+</div>
+
+<div class="container">
+
+    {% if error %}
+        <div class="alert alert-error">
+            ⚠️ {{ error }}
+        </div>
+    {% endif %}
+
+    <div class="search-box">
+        <h2>Consultar Información de Empleado</h2>
+        <form method="GET" action="/admin/empleados/buscar-empleado">
+            <div class="form-group">
+                <label for="cedula">Número de Cédula</label>
+                <div class="search-input-group">
+                    <input id="cedula" name="cedula" type="text" placeholder="Ej: 11062345" value="{{ request.args.get('cedula', '') }}" required>
+                    <button type="submit" class="btn">Buscar</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    {% if empleado %}
+    <div class="result-box">
+        <h3>Datos Registrados</h3>
+        
+        <div class="info-grid">
+            <div class="info-item">
+                <div class="item-label">Cédula</div>
+                <div class="item-value">{{ empleado.cedula }}</div>
+            </div>
+
+            <div class="info-item">
+                <div class="item-label">Estado de Acceso</div>
+                <div class="item-value">
+                    {% if empleado.bloqueado %}
+                        <span class="status-badge status-bloqueado">Bloqueado</span>
+                    {% else %}
+                        <span class="status-badge status-activo">Activo</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="info-item">
+                <div class="item-label">Nombres</div>
+                <div class="item-value">{{ empleado.nombres }}</div>
+            </div>
+
+            <div class="info-item">
+                <div class="item-label">Apellidos</div>
+                <div class="item-value">{{ empleado.apellidos }}</div>
+            </div>
+
+            <div class="info-item full-width">
+                <div class="item-label">Correo Corporativo</div>
+                <div class="item-value">{{ empleado.correo_corp if empleado.correo_corp else 'No asignado' }}</div>
+            </div>
+
+            <div class="info-item">
+                <div class="item-label">Cargo</div>
+                <div class="item-value">{{ empleado.cargo }}</div>
+            </div>
+
+            <div class="info-item">
+                <div class="item-label">Agencia Asignada</div>
+                <div class="item-value">{{ empleado.agencia }}</div>
+            </div>
+
+            <div class="info-item">
+                <div class="item-label">Tipo de Labor</div>
+                <div class="item-value">{{ empleado.tipo_labor if empleado.tipo_labor else 'No definido' }}</div>
+            </div>
+
+            <div class="info-item">
+                <div class="item-label">Estado Laboral</div>
+                <div class="item-value">{{ empleado.estado_laboral if empleado.estado_laboral else 'No definido' }}</div>
+            </div>
+
+            <div class="info-item">
+                <div class="item-label">Salario Base</div>
+                <div class="item-value">${{ empleado.salario_base if empleado.salario_base else '0.00' }}</div>
+            </div>
+
+            <div class="info-item">
+                <div class="item-label">Fecha de Ingreso</div>
+                <div class="item-value">{{ empleado.fecha_ingreso }}</div>
+            </div>
+        </div>
+
+        <div style="text-align: center;">
+            <a href="/admin/empleados/buscar-empleado" class="btn btn-secondary">Limpiar Consulta</a>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+{% endblock %}

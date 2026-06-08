@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+{% block contenido %}
+
+<style>
+    body {
+        background: #f4f7fb;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        min-height: 100vh;
+        margin: 0;
+    }
+
+    .header {
+        background: linear-gradient(90deg, #004c99, #007acc);
+        color: white;
+        padding: 20px;
+        text-align: center;
+        font-size: 22px;
+        font-weight: bold;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        box-sizing: border-box;
+        width: 100%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 10;
+    }
+
+    .logout { position: absolute; top: 20px; right: 30px; color: white; text-decoration: none; font-size: 14px; }
+    .back { position: absolute; top: 20px; left: 30px; color: white; text-decoration: none; font-size: 14px; }
+
+    .container {
+        margin-top: 100px;
+        margin-bottom: 30px;
+        width: 90%;
+        max-width: 650px;
+        box-sizing: border-box;
+    }
+
+    .card-panel {
+        background: white;
+        border: 3px solid #004c99;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        margin-bottom: 25px;
+    }
+
+    h2, h3 {
+        text-align: center;
+        color: #004c99;
+        margin-top: 0;
+        margin-bottom: 20px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 15px;
+    }
+
+    label {
+        font-weight: bold;
+        color: #004c99;
+    }
+
+    /* Contenedor del buscador arreglado */
+    .search-input-group {
+        display: flex !important;
+        gap: 15px !important;
+        width: 100% !important;
+        align-items: center !important;
+        box-sizing: border-box !important;
+    }
+
+    .search-input-group input {
+        flex: 4 !important; /* Le da el 80% del ancho disponible al campo de texto */
+        padding: 12px !important;
+        border: 2px solid #007acc !important;
+        border-radius: 8px !important;
+        font-size: 15px !important;
+        box-sizing: border-box !important;
+        min-width: 0 !important; /* Evita que el navegador colapse el input */
+    }
+
+    .search-input-group input:focus {
+        border-color: #004c99 !important;
+        outline: none !important;
+    }
+
+    .search-input-group .btn {
+        flex: 1 !important; /* El botón solo ocupa el 20% restante */
+        padding: 12px 20px !important;
+        background: linear-gradient(90deg, #004c99, #007acc) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 8px !important;
+        font-size: 15px !important;
+        cursor: pointer !important;
+        font-weight: bold !important;
+        white-space: nowrap !important; /* Evita que el texto "Buscar" se divida */
+        transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+    }
+
+    input:focus {
+        border-color: #004c99;
+        outline: none;
+    }
+
+    .btn {
+        padding: 12px 20px;
+        background: linear-gradient(90deg, #004c99, #007acc);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 15px;
+        cursor: pointer;
+        font-weight: bold;
+        white-space: nowrap;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+
+    .btn-block {
+        width: 100%;
+        margin-top: 10px;
+        padding: 14px;
+    }
+
+    /* Info del Empleado Actual */
+    .info-actual {
+        background: #f8fbff;
+        border: 1px solid #007acc;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+
+    .info-line {
+        margin-bottom: 8px;
+        font-size: 15px;
+    }
+    .info-line:last-child { margin-bottom: 0; }
+
+    /* Alertas */
+    .alert {
+        padding: 12px;
+        border-radius: 8px;
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .alert-error { background: #ffe6e6; color: #cc0000; border: 1px solid #cc0000; }
+    .alert-success { background: #e6ffa0; color: #006600; border: 1px solid #006600; }
+</style>
+
+<div class="header">
+    Traslado de Agencia
+    <a href="/admin/gestion-empleados" class="back">← Volver</a>
+    <a href="/logout" class="logout">Cerrar sesión</a>
+</div>
+
+<div class="container">
+
+    {% if error %}
+        <div class="alert alert-error">⚠️ {{ error }}</div>
+    {% endif %}
+
+    {% if mensaje %}
+        <div class="alert alert-success">✅ {{ mensaje }}</div>
+    {% endif %}
+
+    <div class="card-panel">
+        <h2>Cambiar Agencia de Empleado</h2>
+        <form method="GET" action="/admin/empleados/cambiar-agencia">
+            <div class="form-group">
+                <label for="cedula_buscar">Cédula del Empleado</label>
+                <div class="search-input-group">
+                    <input id="cedula_buscar" name="cedula" type="text" placeholder="Ingrese cédula a consultar..." value="{{ request.args.get('cedula', '') }}" required>
+                    <button type="submit" class="btn">Buscar</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    {% if empleado %}
+    <div class="card-panel">
+        <h3>Información del Empleado y Traslado</h3>
+        
+        <div class="info-actual">
+            <div class="info-line"><strong>Empleado:</strong> {{ empleado.nombre_completo }}</div>
+            <div class="info-line"><strong>Cédula:</strong> {{ empleado.cedula }}</div>
+            <div class="info-line"><strong>Agencia Actual:</strong> <span style="color: #004c99; font-weight: bold;">{{ empleado.codigo_agencia_actual }} - {{ empleado.nombre_agencia_actual }}</span></div>
+        </div>
+
+        <form method="POST" action="/admin/empleados/cambiar-agencia">
+            <input type="hidden" name="cedula" value="{{ empleado.cedula }}">
+
+            <div class="form-group">
+                <label for="nueva_agencia">Código de la Nueva Agencia</label>
+                <input id="nueva_agencia" name="nueva_agencia" type="text" placeholder="Ej: AG-A1B2C3" style="width: 100%; padding: 12px; border: 2px solid #007acc; border-radius: 8px;" required>
+            </div>
+
+            <button type="submit" class="btn btn-block">Confirmar Traslado de Agencia</button>
+        </form>
+    </div>
+    {% endif %}
+
+</div>
+
+{% endblock %}
