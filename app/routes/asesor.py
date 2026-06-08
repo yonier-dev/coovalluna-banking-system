@@ -1538,31 +1538,128 @@ def pago_cuota():
             conn.close()
 
 
-# NO IMPLEMENTADA
+#IMPLEMENTADA
 @asesor_bp.route('/asesor/creditos-activos')
 def creditos_activos():
+
     if session.get('perfil') != 'asesor':
         return redirect(url_for('auth.login'))
 
-    # datos de prueba temporales para ver el html
-    creditos = [
-        {
-            'num_radicado': 'CRED-001',
-            'nombre_asociado': 'Emilce Rentería',
-            'valor_aprobado': '5,000,000',
-            'estado': 'al día',
-            'linea_credito': 'libre inversión',
-            'plazo_meses': 24,
-            'cuotas_pagadas': 6,
-            'cuotas': [
-                {'num_cuota': 1, 'fecha_vencimiento': '2023-02-15', 'fech_pago': '2023-02-15', 'valor_pagado': '245,000', 'estado_pago': 'a tiempo'},
-                {'num_cuota': 2, 'fecha_vencimiento': '2023-03-15', 'fech_pago': '2023-03-15', 'valor_pagado': '245,000', 'estado_pago': 'a tiempo'},
-                {'num_cuota': 3, 'fecha_vencimiento': '2023-04-15', 'fech_pago': None, 'valor_pagado': '0', 'estado_pago': 'pendiente'},
-            ]
-        }
-    ]
+    conn = None
+    cur = None
 
-    return render_template('asesor/creditos_activos.html', creditos=creditos)
+    try:
+        conn = get_conexion()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        # los creditos que estan activos con los datos del asociado
+        cur.execute("""
+            SELECT 
+                c.Num_radicado_pk,
+                c.valor_solicitado,
+                c.estado,
+                c.linea_credito,
+                c.plazo_meses,
+                a.nombres,
+                a.apellidos
+            FROM CREDITO c
+            INNER JOIN SOLICITA s 
+                ON c.Num_radicado_pk = s.Num_radicadoCredito_fk
+            INNER JOIN ASOCIADO a
+                ON s.CedulaAsociado_fk = a.cedula_pk
+            WHERE LOWER(c.estado) != 'pagado'
+            ORDER BY c.Num_radicado_pk DESC
+        """)
+
+        creditos_db = cur.fetchall()
+
+        creditos = []
+
+        # procesa cada credito
+        for c in creditos_db:
+
+            radicado = c['num_radicado_pk']
+
+            # trae las cuotas de cada credito 
+            cur.execute("""
+                SELECT 
+                    Num_cuota,
+                    Fech_pago,
+                    Valor_pagado,
+                    Estado_pago
+                FROM CUOTAS
+                WHERE Num_radicado_fk = %s
+                ORDER BY Num_cuota
+            """, (radicado,))
+
+            cuotas = cur.fetchall()
+
+            total_cuotas = len(cuotas)
+
+            #  cuotas pagas
+            cuotas_pagadas = sum(
+                1 for q in cuotas 
+                if q['estado_pago'] and q['estado_pago'].lower() == 'pagada'
+            )
+
+            # detectar si esta en mora
+            en_mora = any(
+                q['estado_pago'] and q['estado_pago'].lower() == 'mora'
+                for q in cuotas
+            )
+
+            # estado automatico del credito segun lo anterior
+            if cuotas_pagadas == total_cuotas and total_cuotas > 0:
+                estado_credito = "PAGADO"
+
+            elif en_mora:
+                estado_credito = "EN MORA"
+
+            else:
+                estado_credito = "ACTIVO"
+
+            # estructura final ya armandose completa con datos
+            creditos.append({
+                'num_radicado': radicado,
+                'nombre_asociado': f"{c['nombres']} {c['apellidos']}",
+                'valor_aprobado': c['valor_solicitado'],
+                'estado': estado_credito,
+                'estado_bd': c['estado'],
+                'linea_credito': c['linea_credito'],
+                'plazo_meses': c['plazo_meses'],
+                'cuotas_pagadas': cuotas_pagadas,
+                'total_cuotas': total_cuotas,
+                'cuotas': [
+                    {
+                        'num_cuota': q['num_cuota'],
+                        'fech_pago': q['fech_pago'],
+                        'valor_pagado': q['valor_pagado'],
+                        'estado_pago': q['estado_pago']
+                    }
+                    for q in cuotas
+                ]
+            })
+
+        return render_template(
+            'asesor/creditos_activos.html',
+            creditos=creditos
+        )
+
+    except Exception as e:
+        print("\n========== ERROR CREDITOS ACTIVOS ==========")
+        print(e)
+        print("===========================================\n")
+
+        return render_template(
+            'asesor/creditos_activos.html',
+            creditos=[]
+        )
+
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
 
 
 # NO IMPLEMENTADA
