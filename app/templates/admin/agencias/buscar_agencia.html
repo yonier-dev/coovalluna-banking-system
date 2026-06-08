@@ -11,30 +11,21 @@
         font-size: 22px;
         font-weight: bold;
         box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        box-sizing: border-box; /* Evita que se salga de la pantalla */
+        width: 100%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 10;
     }
 
-    .logout {
-        position: absolute;
-        top: 20px;
-        right: 30px;
-        color: white;
-        text-decoration: none;
-        font-size: 14px;
-    }
-
-    .back {
-        position: absolute;
-        top: 20px;
-        left: 30px;
-        color: white;
-        text-decoration: none;
-        font-size: 14px;
-    }
+    .logout { position: absolute; top: 20px; right: 30px; color: white; text-decoration: none; font-size: 14px; }
+    .back { position: absolute; top: 20px; left: 30px; color: white; text-decoration: none; font-size: 14px; }
 
     .container {
         width: 95%;
-        max-width: 1400px;
-        margin: 30px auto;
+        max-width: 1000px;
+        margin: 100px auto 30px auto; /* 100px arriba para no taparse con el header */
         background: white;
         border-radius: 12px;
         padding: 30px;
@@ -48,13 +39,25 @@
         margin-bottom: 25px;
     }
 
-    .botones {
+    .search-form {
         display: flex;
-        flex-direction: row; /* Fuerza a que se alineen en una fila */
-        flex-wrap: wrap; /* Permite que bajen de línea solo si la pantalla es muy pequeña */
-        gap: 20px; /* Espacio limpio entre los botones */
         justify-content: center;
+        align-items: center;
+        gap: 15px;
         margin-bottom: 30px;
+    }
+
+    .search-form input {
+        padding: 12px;
+        border: 2px solid #007acc;
+        border-radius: 8px;
+        font-size: 15px;
+        width: 300px;
+    }
+
+    .search-form input:focus {
+        border-color: #004c99;
+        outline: none;
     }
 
     .btn {
@@ -63,25 +66,23 @@
         border: none;
         cursor: pointer;
         font-weight: bold;
-        font-size: 15px; /* Un tamaño de letra un poco más legible */
+        font-size: 15px;
         background: #007acc;
         color: white;
-        min-width: 180px; /* Hace que todos los botones tengan un tamaño similar */
-        width: auto; /* Anula cualquier 100% de ancho que venga de otro lado */
-        text-align: center;
         transition: transform 0.2s ease, background 0.3s ease, box-shadow 0.2s ease;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1); /* Sombra suave para dar relieve */
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
 
     .btn:hover {
         background: #004c99;
-        transform: translateY(-3px); /* Da un pequeño "salto" hacia arriba al pasar el mouse */
-        box-shadow: 0 6px 15px rgba(0,0,0,0.2); /* La sombra crece en el hover */
+        transform: translateY(-3px);
+        box-shadow: 0 6px 15px rgba(0,0,0,0.2);
     }
 
     table {
         width: 100%;
         border-collapse: collapse;
+        margin-top: 10px;
     }
 
     th {
@@ -97,47 +98,40 @@
         text-align: center;
     }
 
-    tr:nth-child(even) {
-        background: #f9fcff;
-    }
+    tr:nth-child(even) { background: #f9fcff; }
+    tr:hover { background: #e6f2ff; }
 
-    tr:hover {
-        background: #e6f2ff;
-    }
-
-    .estado-inactivo {
-        color: red;
+    .no-results {
+        text-align: center;
+        color: #cc0000;
         font-weight: bold;
-    }
-
-    .estado-activo {
-        color: green;
-        font-weight: bold;
+        margin-top: 20px;
+        padding: 15px;
+        background: #ffe6e6;
+        border-radius: 8px;
+        border: 1px solid #cc0000;
     }
 </style>
 
 <div class="header">
-    Gestión de Agencias
-    <a href="/admin/dashboard" class="back">← Volver</a>
+    Buscar Agencia
+    <a href="/admin/gestion-agencias" class="back">← Volver</a>
     <a href="/logout" class="logout">Cerrar sesión</a>
 </div>
 
 <div class="container">
-    <h2>Administración de Agencias</h2>
-
-    <div class="botones">
-        <a href="/admin/agencias/crear-agencia" class="btn crear">Crear Agencia</a>
-        <a href="/admin/agencias/modificar-agencia" class="btn modificar">Modificar Agencia</a>
-        <a href="/admin/agencias/buscar-agencia" class="btn buscar">Buscar Agencia</a>
-    </div>
-
+    <h2>Consulta de Agencias</h2>
     {% if error %}
-        <div style="color: #cc0000; font-weight: bold; text-align: center; margin-bottom: 20px;">
+        <div style="color: #cc0000; font-weight: bold; text-align: center; margin-bottom: 20px; padding: 10px; background: #ffe6e6; border-radius: 8px; border: 1px solid #cc0000;">
             ⚠️ {{ error }}
         </div>
     {% endif %}
+    <form class="search-form" method="GET" action="/admin/agencias/buscar-agencia">
+        <input type="text" name="codigo" placeholder="Ingrese el código de la agencia..." required value="{{ request.args.get('codigo', '') }}">
+        <button type="submit" class="btn">Buscar</button>
+    </form>
 
-    {% if agencias %}
+    {% if agencia %}
     <table>
         <thead>
             <tr>
@@ -150,7 +144,6 @@
             </tr>
         </thead>
         <tbody>
-            {% for agencia in agencias %}
             <tr>
                 <td>{{ agencia.codigo }}</td>
                 <td>{{ agencia.nombre }}</td>
@@ -159,13 +152,12 @@
                 <td>{{ agencia.telefono }}</td>
                 <td>{{ agencia.fecha_apertura }}</td>
             </tr>
-            {% endfor %}
         </tbody>
     </table>
-    {% else %}
-        <p style="text-align: center; color: #6c757d; font-weight: bold;">
-            No hay agencias registradas en el sistema actualmente.
-        </p>
+    {% elif request.args.get('codigo') %}
+    <div class="no-results">
+        ⚠️ No se encontró ninguna agencia registrada con el código "{{ request.args.get('codigo') }}".
+    </div>
     {% endif %}
 </div>
 {% endblock %}

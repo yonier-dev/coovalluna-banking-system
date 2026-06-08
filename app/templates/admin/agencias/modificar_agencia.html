@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% block contenido %}
+<style>
+    body {
+        background: #f4f7fb;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        min-height: 100vh;
+        margin: 0;
+    }
+
+    .header {
+        background: linear-gradient(90deg, #004c99, #007acc);
+        color: white;
+        padding: 20px;
+        text-align: center;
+        font-size: 22px;
+        font-weight: bold;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        box-sizing: border-box;
+        width: 100%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 10;
+    }
+
+    .logout { position: absolute; top: 20px; right: 30px; color: white; text-decoration: none; font-size: 14px; }
+    .back { position: absolute; top: 20px; left: 30px; color: white; text-decoration: none; font-size: 14px; }
+
+    .form-box {
+        margin-top: 100px;
+        margin-bottom: 30px;
+        background: white;
+        border: 3px solid #004c99;
+        border-radius: 12px;
+        padding: 30px;
+        width: 550px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        box-sizing: border-box;
+    }
+
+    h2 {
+        text-align: center;
+        margin-bottom: 25px;
+        color: #004c99;
+    }
+
+    .form-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    label {
+        font-weight: bold;
+        color: #004c99;
+        display: block;
+        margin-bottom: 6px;
+    }
+
+    input {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #007acc;
+        border-radius: 8px;
+        font-size: 14px;
+        box-sizing: border-box;
+    }
+
+    input:focus {
+        border-color: #004c99;
+        outline: none;
+    }
+
+    input:disabled {
+        background: #e9ecef;
+        border-color: #ced4da;
+        color: #6c757d;
+        cursor: not-allowed;
+    }
+
+    .btn-block {
+        display: flex;
+        gap: 10px;
+    }
+
+    .submit-btn {
+        flex: 1;
+        padding: 14px;
+        background: linear-gradient(90deg, #004c99, #007acc);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .submit-btn:hover {
+        transform: scale(1.03);
+        box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+    }
+
+    .cancel-btn {
+        padding: 14px 20px;
+        background: #6c757d;
+        color: white;
+        text-decoration: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: bold;
+        text-align: center;
+        transition: background 0.2s;
+    }
+
+    .cancel-btn:hover {
+        background: #5a6268;
+    }
+
+    .flash-messages {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 20px 0;
+        text-align: center;
+        font-weight: bold;
+    }
+    .flash-success { color: green; }
+    .flash-error { color: #cc0000; }
+</style>
+
+<div class="header">
+    Modificación de Agencia
+    <a href="/admin/gestion-agencias" class="back">← Volver</a>
+    <a href="/logout" class="logout">Cerrar sesión</a>
+</div>
+
+<div class="form-box">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul class="flash-messages">
+        {% for category, message in messages %}
+          <li class="flash-{{ category }}">{{ message }}</li>
+        {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    {% if not agencia %}
+    <h2>Buscar Agencia a Modificar</h2>
+    <form class="form-grid" method="GET" action="/admin/agencias/modificar-agencia">
+        <div>
+            <label for="codigo_buscar">Código de la Agencia</label>
+            <input id="codigo_buscar" name="codigo" type="text" placeholder="Ingrese el código para verificar..." required>
+        </div>
+        <button type="submit" class="submit-btn">Verificar Existencia</button>
+    </form>
+
+    {% else %}
+    <h2>Modificar Datos</h2>
+    <form class="form-grid" method="POST" action="/admin/agencias/modificar-agencia">
+        
+        <input type="hidden" name="codigo" value="{{ agencia.codigo }}">
+
+        <div>
+            <label>Código de Agencia (No editable)</label>
+            <input type="text" value="{{ agencia.codigo }}" disabled>
+        </div>
+
+        <div>
+            <label for="nombre">Nombre de la Agencia</label>
+            <input id="nombre" name="nombre" type="text" value="{{ agencia.nombre }}" required>
+        </div>
+        
+        <div>
+            <label for="direccion">Dirección</label>
+            <input id="direccion" name="direccion" type="text" value="{{ agencia.direccion }}" required>
+        </div>
+
+        <div>
+            <label for="telefono">Teléfono</label>
+            <input id="telefono" name="telefono" type="tel" value="{{ agencia.telefono }}" required>
+        </div>
+
+        <div class="btn-block">
+            <a href="/admin/agencias/modificar-agencia" class="cancel-btn">Cancelar</a>
+            <button type="submit" class="submit-btn">Guardar Cambios</button>
+        </div>
+    </form>
+    {% endif %}
+</div>
+{% endblock %}
