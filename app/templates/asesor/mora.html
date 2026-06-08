@@ -55,10 +55,10 @@
                 {% for m in mora %}
                 <tr>
                     <td>{{ m.nombre_asociado }}</td>
-                    <td>{{ m.num_credito }}</td>
+                    <td>{{ m.num_radicado }}</td>
                     <td>{{ m.num_cuota }}</td>
                     <td class="estado-mora">{{ m.dias_mora }}</td>
-                    <td>{{ m.nombre_asesor }}</td>
+                    <td>{{ m.asesor }}</td>
                 </tr>
                 {% endfor %}
             {% else %}
