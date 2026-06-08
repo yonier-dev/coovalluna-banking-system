@@ -1,8 +1,10 @@
 {% extends "base.html" %}
 {% block contenido %}
+
 <style>
-   body {
+    body {
         background: #f4f7fb;
+        font-family: sans-serif;
     }
 
     .header {
@@ -15,108 +17,244 @@
         box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     }
 
-    .logout { position: absolute; top: 20px; right: 30px; color: white; text-decoration: none; }
-    .back { position: absolute; top: 20px; left: 30px; color: white; text-decoration: none; }
+    .logout { position: absolute; top: 20px; right: 30px; color: white; text-decoration: none; font-size: 14px; }
+    .back { position: absolute; top: 20px; left: 30px; color: white; text-decoration: none; font-size: 14px; }
 
     .container {
         width: 95%;
         max-width: 1200px;
-        margin: 40px auto;
+        margin: 30px auto;
         background: white;
         border-radius: 12px;
-        padding: 40px;
+        padding: 30px;
         box-shadow: 0 6px 20px rgba(0,0,0,0.15);
         border: 3px solid #004c99;
+        box-sizing: border-box;
     }
 
     h2 {
-        text-align: center;
         color: #004c99;
-        margin-bottom: 10px;
+        margin-top: 0;
+        margin-bottom: 25px;
+        text-align: center;
     }
 
-    .subtitle {
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        max-width: 500px;
+        margin: 0 auto 25px auto;
+    }
+
+    .campo label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 8px;
+        color: #004c99;
+    }
+
+    .campo select {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #007acc;
+        border-radius: 8px;
+        box-sizing: border-box;
+        font-size: 15px;
+        background: white;
+    }
+
+    .botones {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-bottom: 35px;
+    }
+
+    .btn {
+        padding: 12px 25px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 15px;
+        background: #007acc;
+        color: white;
+        transition: all 0.2s ease;
+    }
+
+    .btn:hover:not(:disabled) {
+        background: #004c99;
+        transform: translateY(-2px);
+    }
+
+    .btn:disabled {
+        background: #cccccc;
+        color: #666666;
+        cursor: not-allowed;
+    }
+
+    .btn-exportar { background: #28a745; }
+    .btn-exportar:hover:not(:disabled) { background: #218838; }
+
+    /* estilos para las alertas de mora sin generar problemas visuales */
+    .mora-critica { color: #cc0000; font-weight: bold; }
+    .mora-leve { color: #ff8800; font-weight: bold; }
+
+    .kpi-container {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        margin-bottom: 35px;
+    }
+
+    .kpi-card {
+        border: 2px solid #007acc;
+        background: #f8fbff;
+        border-radius: 10px;
+        padding: 20px;
         text-align: center;
+    }
+
+    .kpi-card h3 {
+        margin: 0 0 10px 0;
         color: #555;
-        margin-bottom: 40px;
         font-size: 16px;
     }
 
-    .grid-reportes {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 25px;
+    .kpi-card .valor {
+        font-size: 24px;
+        font-weight: bold;
+        color: #cc0000;
     }
 
-    .card-reporte {
-        background: #f8fbff;
-        border: 2px solid #007acc;
-        border-radius: 10px;
-        padding: 25px;
-        text-align: center;
-        text-decoration: none;
-        color: #333;
-        transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        align-items: center;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    table {
+        width: 100%;
+        border-collapse: collapse;
     }
 
-    .card-reporte:hover {
-        transform: translateY(-5px);
-        background: #eaf4ff;
-        box-shadow: 0 8px 15px rgba(0,0,0,0.15);
-        border-color: #004c99;
-    }
-
-    .card-reporte .numero {
+    th {
         background: #004c99;
         color: white;
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        margin-bottom: 15px;
+        padding: 14px;
+        border: 1px solid #007acc;
+        font-size: 15px;
     }
 
-    .card-reporte h3 {
-        color: #004c99;
-        margin: 0 0 10px 0;
-        font-size: 18px;
-    }
-
-    .card-reporte p {
-        font-size: 14px;
-        color: #666;
-        margin: 0 0 20px 0;
-        line-height: 1.4;
-    }
-
-    .card-reporte .btn-entrar {
-        background: #007acc;
-        color: white;
-        padding: 8px 20px;
-        border-radius: 6px;
-        font-weight: bold;
+    td {
+        padding: 12px;
+        border: 1px solid #007acc;
+        text-align: center;
         font-size: 14px;
     }
+
+    tr:nth-child(even) { background: #f8fbff; }
+    tr:hover { background: #eaf4ff; }
+
+    .alert {
+        padding: 12px;
+        border-radius: 8px;
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .alert-error { background: #ffe6e6; color: #cc0000; border: 1px solid #cc0000; }
 </style>
+
 <div class="header">
-    Reporte 4: Alertas de Asociados en Mora
-    <a href="/admin/reportes" class="back">← Cambiar Reporte</a>
+    Reporte: Alertas de Asociados en Mora
+    <a href="/admin/reportes" class="back">← Volver a Reportes</a>
+    <a href="/logout" class="logout">Cerrar sesión</a>
 </div>
+
 <div class="container">
-    <h2>Control de Cartera Vencida (Corte a Hoy)</h2>
+    <h2>Deteccion de Carteras Vencidas</h2>
+
+    {% if error %}
+        <div class="alert alert-error">⚠️ {{ error }}</div>
+    {% endif %}
+
+    <form method="GET" action="/admin/reportes/asociados-en-mora">
+        <div class="form-grid">
+            <div class="campo">
+                <label for="dias_mora">Rango de Dias en Mora</label>
+                <select id="dias_mora" name="dias_mora">
+                    <option value="1" {% if filtro_dias == '1' %}selected{% endif %}>Todos los vencidos (mas de 1 dia)</option>
+                    <option value="30" {% if filtro_dias == '30' %}selected{% endif %}>Mora temprana (mas de 30 dias)</option>
+                    <option value="60" {% if filtro_dias == '60' %}selected{% endif %}>Mora intermedia (mas de 60 dias)</option>
+                    <option value="90" {% if filtro_dias == '90' %}selected{% endif %}>Mora critica (mas de 90 dias)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="botones">
+            <button type="submit" class="btn">Buscar Vencimientos</button>
+        </div>
+    </form>
+
+    <div class="kpi-container">
+        <div class="kpi-card">
+            <h3>Cuotas Vencidas Detectadas</h3>
+            <div class="valor">{{ resumen.total_en_mora }}</div>
+        </div>
+        <div class="kpi-card">
+            <h3>Capital Total en Riesgo</h3>
+            <div class="valor">${{ "%.2f"|format(resumen.monto_vencido_total) }}</div>
+        </div>
+    </div>
+
     <table>
         <thead>
-            <tr><th>Asociado</th><th>Número Crédito</th><th>N° Cuotas Vencidas</th><th>Días de Mora</th><th>Asesor Responsable</th></tr>
+            <tr>
+                <th>Asociado</th>
+                <th>Radicado Credito</th>
+                <th>Linea</th>
+                <th>Num Cuota</th>
+                <th>Fecha Vence</th>
+                <th>Valor Cuota</th>
+                <th>Dias Mora</th>
+                <th>Asesor Asignado</th>
+            </tr>
         </thead>
-        <tbody><tr><td colspan="5" style="color: red; font-weight: bold;">Cargando registros con cuotas vencidas...</td></tr></tbody>
+        <tbody>
+            {% if mora_lista %}
+                {% for item in mora_lista %}
+                <tr>
+                    <td style="text-align: left;"><strong>{{ item.apellidos_asoc }}, {{ item.nombres_asoc }}</strong></td>
+                    <td>{{ item.num_radicado_pk }}</td>
+                    <td>{{ item.linea_credito }}</td>
+                    <td>{{ item.num_cuota }}</td>
+                    <td>{{ item.fecha_vencimiento }}</td>
+                    <td style="font-weight: bold; color: #cc0000;">
+                        ${{ "%.2f"|format(item.valor_cuota|float) }}
+                    </td>
+                    <td>
+                        {% set clase_mora = 'mora-critica' if item.dias_retraso >= 90 else 'mora-leve' %}
+                        <span class="{{ clase_mora }}">
+                            {{ item.dias_retraso }} dias
+                        </span>
+                    </td>
+                    <td>
+                        {% if item.nombre_asesor %}
+                            {{ item.nombre_asesor }} {{ item.apellido_asesor }}
+                        {% else %}
+                            <em style="color: #999;">Sin asignar</em>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="8" style="color: #666; padding: 25px;">
+                        {% if busqueda_realizada %}
+                            Excelente, no se encontraron cuotas vencidas para el rango seleccionado.
+                        {% else %}
+                            Haga clic en "Buscar Vencimientos" para verificar el estado de la cartera.
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endif %}
+        </tbody>
     </table>
 </div>
+
 {% endblock %}

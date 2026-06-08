@@ -1,8 +1,10 @@
 {% extends "base.html" %}
 {% block contenido %}
+
 <style>
-   body {
+    body {
         background: #f4f7fb;
+        font-family: sans-serif;
     }
 
     .header {
@@ -15,124 +17,278 @@
         box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     }
 
-    .logout { position: absolute; top: 20px; right: 30px; color: white; text-decoration: none; }
-    .back { position: absolute; top: 20px; left: 30px; color: white; text-decoration: none; }
+    .logout { position: absolute; top: 20px; right: 30px; color: white; text-decoration: none; font-size: 14px; }
+    .back { position: absolute; top: 20px; left: 30px; color: white; text-decoration: none; font-size: 14px; }
 
     .container {
         width: 95%;
         max-width: 1200px;
-        margin: 40px auto;
+        margin: 30px auto;
         background: white;
         border-radius: 12px;
-        padding: 40px;
+        padding: 30px;
         box-shadow: 0 6px 20px rgba(0,0,0,0.15);
         border: 3px solid #004c99;
+        box-sizing: border-box;
     }
 
     h2 {
+        color: #004c99;
+        margin-top: 0;
+        margin-bottom: 25px;
+        text-align: center;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        margin-bottom: 25px;
+    }
+
+    .campo label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 8px;
+        color: #004c99;
+    }
+
+    .campo input {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #007acc;
+        border-radius: 8px;
+        box-sizing: border-box;
+        font-size: 15px;
+    }
+
+    .botones {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-bottom: 35px;
+    }
+
+    .btn {
+        padding: 12px 25px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 15px;
+        background: #007acc;
+        color: white;
+        transition: all 0.2s ease;
+    }
+
+    .btn:hover:not(:disabled) {
+        background: #004c99;
+        transform: translateY(-2px);
+    }
+
+    .btn:disabled {
+        background: #cccccc;
+        color: #666666;
+        cursor: not-allowed;
+    }
+
+    .btn-exportar { background: #28a745; }
+    .btn-exportar:hover:not(:disabled) { background: #218838; }
+
+    /* Contenedor de bloque resumen */
+    .resumen-container {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 35px;
+    }
+
+    .resumen {
+        width: 100%;
+        max-width: 500px;
+        border: 3px solid #007acc;
+        border-radius: 12px;
+        background: #f8fbff;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+
+    .resumen h3 {
+        margin-top: 0;
         text-align: center;
         color: #004c99;
-        margin-bottom: 10px;
-    }
-
-    .subtitle {
-        text-align: center;
-        color: #555;
-        margin-bottom: 40px;
-        font-size: 16px;
-    }
-
-    .grid-reportes {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 25px;
-    }
-
-    .card-reporte {
-        background: #f8fbff;
-        border: 2px solid #007acc;
-        border-radius: 10px;
-        padding: 25px;
-        text-align: center;
-        text-decoration: none;
-        color: #333;
-        transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        align-items: center;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-    }
-
-    .card-reporte:hover {
-        transform: translateY(-5px);
-        background: #eaf4ff;
-        box-shadow: 0 8px 15px rgba(0,0,0,0.15);
-        border-color: #004c99;
-    }
-
-    .card-reporte .numero {
-        background: #004c99;
-        color: white;
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
+        border-bottom: 2px solid #007acc;
+        padding-bottom: 10px;
         margin-bottom: 15px;
     }
 
-    .card-reporte h3 {
-        color: #004c99;
-        margin: 0 0 10px 0;
-        font-size: 18px;
+    .resumen-item {
+        display: flex;
+        justify-content: space-between;
+        margin: 12px 0;
+        font-size: 15px;
     }
 
-    .card-reporte p {
-        font-size: 14px;
-        color: #666;
-        margin: 0 0 20px 0;
-        line-height: 1.4;
+    table {
+        width: 100%;
+        border-collapse: collapse;
     }
 
-    .card-reporte .btn-entrar {
-        background: #007acc;
+    th {
+        background: #004c99;
         color: white;
-        padding: 8px 20px;
-        border-radius: 6px;
-        font-weight: bold;
+        padding: 14px;
+        border: 1px solid #007acc;
+        font-size: 15px;
+    }
+
+    td {
+        padding: 12px;
+        border: 1px solid #007acc;
+        text-align: center;
         font-size: 14px;
     }
+
+    tr:nth-child(even) { background: #f8fbff; }
+    tr:hover { background: #eaf4ff; }
+
+        /* Clases para estados financieros sin romper el validador */
+    .monto-positivo { color: green !important; font-weight: bold; }
+    .monto-negativo { color: red !important; font-weight: bold; }
+
+    /* REGLA DE ORO: Corrige el buscador encogido de tus imágenes */
+    .search-input-group {
+        display: flex !important;
+        gap: 15px !important;
+        width: 100% !important;
+        align-items: center !important;
+        margin-bottom: 25px;
+    }
+    .search-input-group input { 
+        flex: 4 !important; 
+        padding: 12px !important;
+        border: 2px solid #007acc !important;
+        border-radius: 8px !important;
+    }
+    .search-input-group .btn { 
+        flex: 1 !important; 
+        white-space: nowrap !important; 
+        padding: 12px !important;
+    }
+
+        .alert {
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .alert-error { background: #ffe6e6; color: #cc0000; border: 1px solid #cc0000; }
 </style>
+
 <div class="header">
-    Reporte 2: Extracto de Cuenta de Ahorro
-    <a href="/admin/reportes" class="back">← Cambiar Reporte</a>
+    Reporte: Extracto de Cuenta de Ahorro
+    <a href="/admin/reportes" class="back">← Volver a Reportes</a>
+    <a href="/logout" class="logout">Cerrar sesión</a>
 </div>
+
 <div class="container">
-    <h2>Consultar Cuenta de Ahorros</h2>
-    <form method="GET">
-        <div class="form-grid" style="grid-template-columns: repeat(3, 1fr);">
-            <div class="campo"><label>Número de Cuenta (*)</label><input type="text" name="num_cuenta" required></div>
-            <div class="campo"><label>Fecha Inicio</label><input type="date" name="fecha_inicio"></div>
-            <div class="campo"><label>Fecha Fin</label><input type="date" name="fecha_fin"></div>
+    <h2>Extracto de Movimientos</h2>
+
+    {% if error %}
+        <div class="alert alert-error">⚠️ {{ error }}</div>
+    {% endif %}
+
+    <form method="GET" action="/admin/reportes/extracto-cuenta-ahorro">
+        <div class="form-grid">
+            <div class="campo">
+                <label for="num_cuenta">Número de Cuenta (*)</label>
+                <input type="text" id="num_cuenta" name="num_cuenta" placeholder="Ej: 4500912" value="{{ num_cuenta }}" required>
+            </div>
+
+            <div class="campo">
+                <label for="fecha_inicio">Fecha Desde</label>
+                <input type="date" id="fecha_inicio" name="fecha_inicio" value="{{ fecha_inicio }}">
+            </div>
+
+            <div class="campo">
+                <label for="fecha_fin">Fecha Hasta</label>
+                <input type="date" id="fecha_fin" name="fecha_fin" value="{{ fecha_fin }}">
+            </div>
         </div>
-        <div class="botones"><button type="submit" class="btn">Generar Extracto</button></div>
+
+        <div class="botones">
+            <button type="submit" class="btn">Generar Extracto</button>
+
+        </div>
     </form>
+
     <div class="resumen-container">
         <div class="resumen">
-            <h3>Cálculo de Saldos</h3>
-            <div class="resumen-item"><strong>Total Entradas (Créditos):</strong> $0.00</div>
-            <div class="resumen-item"><strong>Total Salidas (Débitos):</strong> $0.00</div>
-            <div class="resumen-item"><strong>Saldo Neto Calculado:</strong> <span style="color: green; font-weight:bold;">$0.00</span></div>
+            <h3>Resumen Financiero del Período</h3>
+            <div class="resumen-item">
+                <strong>Total Movimientos Encontrados:</strong>
+                <span>{{ resumen.total_registros }}</span>
+            </div>
+            <div class="resumen-item">
+                <strong>Total Entradas (Créditos):</strong>
+                <span style="color: #28a745; font-weight: bold;">+ ${{ "{:,.2f}".format(resumen.total_entradas) }}</span>
+            </div>
+            <div class="resumen-item">
+                <strong>Total Salidas (Débitos):</strong>
+                <span style="color: #cc0000; font-weight: bold;">- ${{ "{:,.2f}".format(resumen.total_salidas) }}</span>
+            </div>
+            <hr style="border: 0; border-top: 1px solid #007acc; margin: 10px 0;">
+            <div class="resumen-item" style="font-size: 17px;">
+                <strong>Saldo Neto Calculado:</strong>
+                {% set clase_saldo = 'monto-positivo' if resumen.saldo_neto >= 0 else 'monto-negativo' %}
+                <span class="{{ clase_saldo }}">
+                    ${{ "%.2f"|format(resumen.saldo_neto) }}
+                </span>
+            </div>
         </div>
     </div>
+
     <table>
         <thead>
-            <tr><th>Fecha Movimiento</th><th>Tipo (Débito/Crédito)</th><th>Canal</th><th>Valor</th></tr>
+            <tr>
+                <th>Código Transacción</th>
+                <th>Fecha y Hora</th>
+                <th>Tipo Movimiento</th>
+                <th>Canal Operación</th>
+                <th>Monto del Movimiento</th>
+                <th>Saldo de Cuenta Remanente</th>
+            </tr>
         </thead>
-        <tbody><tr><td colspan="4">Ingrese un número de cuenta válido para calcular el extracto</td></tr></tbody>
+        <tbody>
+            {% if movimientos %}
+                {% for mov in movimientos %}
+                <tr>
+                    <td><strong>{{ mov.num_transaccion_pk }}</strong></td>
+                    <td>{{ mov.fecha_hora }}</td>
+                    <td>{{ mov.tipo_movimiento }}</td>
+                    <td>{{ mov.canal if mov.canal else 'N/A' }}</td>
+                    <td>
+                        {% set es_entrada = mov.tipo_movimiento.upper() in ['CONSIGNACION', 'DEPOSITO', 'TRANSFERENCIA_ENTRANTE', 'INTERESES', 'CREDITO'] %}
+                        <span class="{{ 'monto-positivo' if es_entrada else 'monto-negativo' }}">
+                            ${{ "%.2f"|format(mov.valor|float) }}
+                        </span>
+                    </td>
+                    <td>${{ "{:,.2f}".format(mov.saldo) }}</td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="6" style="color: #666; padding: 25px;">
+                        {% if busqueda_realizada %}
+                            No se encontraron transacciones registradas para la cuenta indicada en este rango de fechas.
+                        {% else %}
+                            Ingrese el número de cuenta de ahorros arriba y pulse "Generar Extracto".
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endif %}
+        </tbody>
     </table>
 </div>
+
 {% endblock %}

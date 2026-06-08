@@ -1,8 +1,10 @@
 {% extends "base.html" %}
 {% block contenido %}
+
 <style>
-   body {
+    body {
         background: #f4f7fb;
+        font-family: sans-serif;
     }
 
     .header {
@@ -15,133 +17,192 @@
         box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     }
 
-    .logout { position: absolute; top: 20px; right: 30px; color: white; text-decoration: none; }
-    .back { position: absolute; top: 20px; left: 30px; color: white; text-decoration: none; }
+    .logout { position: absolute; top: 20px; right: 30px; color: white; text-decoration: none; font-size: 14px; }
+    .back { position: absolute; top: 20px; left: 30px; color: white; text-decoration: none; font-size: 14px; }
 
     .container {
         width: 95%;
         max-width: 1200px;
-        margin: 40px auto;
+        margin: 30px auto;
         background: white;
         border-radius: 12px;
-        padding: 40px;
+        padding: 30px;
         box-shadow: 0 6px 20px rgba(0,0,0,0.15);
         border: 3px solid #004c99;
+        box-sizing: border-box;
     }
 
     h2 {
-        text-align: center;
         color: #004c99;
-        margin-bottom: 10px;
-    }
-
-    .subtitle {
+        margin-top: 0;
+        margin-bottom: 25px;
         text-align: center;
-        color: #555;
-        margin-bottom: 40px;
-        font-size: 16px;
     }
 
-    .grid-reportes {
+    .form-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 25px;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        margin-bottom: 25px;
     }
 
-    .card-reporte {
-        background: #f8fbff;
-        border: 2px solid #007acc;
-        border-radius: 10px;
-        padding: 25px;
-        text-align: center;
-        text-decoration: none;
-        color: #333;
-        transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        align-items: center;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-    }
-
-    .card-reporte:hover {
-        transform: translateY(-5px);
-        background: #eaf4ff;
-        box-shadow: 0 8px 15px rgba(0,0,0,0.15);
-        border-color: #004c99;
-    }
-
-    .card-reporte .numero {
-        background: #004c99;
-        color: white;
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    .campo label {
+        display: block;
         font-weight: bold;
-        margin-bottom: 15px;
-    }
-
-    .card-reporte h3 {
+        margin-bottom: 8px;
         color: #004c99;
-        margin: 0 0 10px 0;
-        font-size: 18px;
     }
 
-    .card-reporte p {
-        font-size: 14px;
-        color: #666;
-        margin: 0 0 20px 0;
-        line-height: 1.4;
+    .campo select {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #007acc;
+        border-radius: 8px;
+        box-sizing: border-box;
+        font-size: 15px;
+        background: white;
     }
 
-    .card-reporte .btn-entrar {
+    .botones {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        margin-bottom: 35px;
+    }
+
+    .btn {
+        padding: 12px 25px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 15px;
         background: #007acc;
         color: white;
-        padding: 8px 20px;
-        border-radius: 6px;
-        font-weight: bold;
+        transition: all 0.2s ease;
+    }
+
+    .btn:hover {
+        background: #004c99;
+        transform: translateY(-2px);
+    }
+
+    .btn-exportar { background: #28a745; }
+    .btn-exportar:hover { background: #218838; }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+    }
+
+    th {
+        background: #004c99;
+        color: white;
+        padding: 14px;
+        border: 1px solid #007acc;
+        font-size: 15px;
+    }
+
+    td {
+        padding: 12px;
+        border: 1px solid #007acc;
+        text-align: center;
         font-size: 14px;
     }
+
+    tr:nth-child(even) { background: #f8fbff; }
+    tr:hover { background: #eaf4ff; }
+
+    .alert {
+        padding: 12px;
+        border-radius: 8px;
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .alert-error { background: #ffe6e6; color: #cc0000; border: 1px solid #cc0000; }
 </style>
+
 <div class="header">
-    Reporte 1: Asociados por Estado y Agencia
-    <a href="/admin/reportes" class="back">← Cambiar Reporte</a>
+    Reporte: Asociados por Estado y Agencia
+    <a href="/admin/reportes" class="back">← Volver a Reportes</a>
+    <a href="/logout" class="logout">Cerrar sesión</a>
 </div>
+
 <div class="container">
-    <h2>Filtros del Reporte</h2>
-    <form method="GET" action="">
+    <h2>Listado de Asociados</h2>
+
+    {% if error %}
+        <div class="alert alert-error">⚠️ {{ error }}</div>
+    {% endif %}
+
+    <form method="GET" action="/admin/reportes/asociados-estado-agencia">
         <div class="form-grid">
             <div class="campo">
-                <label>Estado del Asociado</label>
-                <select name="estado">
-                    <option value="">Todos los estados</option>
-                    <option value="ACTIVO">Activo</option>
-                    <option value="SUSPENDIDO">Suspendido</option>
-                    <option value="RETIRADO">Retirado</option>
+                <label for="estado">Estado del Asociado</label>
+                <select id="estado" name="estado">
+                    <option value="">-- Todos los Estados --</option>
+                    <option value="activo" {% if filtro_estado == 'ACTIVO' %}selected{% endif %}>Activo</option>
+                    <option value="suspendido" {% if filtro_estado == 'SUSPENDIDO' %}selected{% endif %}>Suspendido</option>
+                    <option value="retirado" {% if filtro_estado == 'RETIRADO' %}selected{% endif %}>Retirado</option>
                 </select>
             </div>
+
             <div class="campo">
-                <label>Agencia</label>
-                <select name="agencia">
-                    <option value="">Todas las agencias</option>
-                    {% for ag in lista_agencias %}<option value="{{ag.id}}">{{ag.nombre}}</option>{% endfor %}
+                <label for="agencia">Agencia Relacionada</label>
+                <select id="agencia" name="agencia">
+                    <option value="">-- Todas las Agencias --</option>
+                    {% for ag in lista_agencias %}
+                        <option value="{{ ag.codigo_pk }}" {% if filtro_agencia == ag.codigo_pk %}selected{% endif %}>
+                            {{ ag.nombre }}
+                        </option>
+                    {% endfor %}
                 </select>
             </div>
         </div>
+
         <div class="botones">
             <button type="submit" class="btn">Filtrar Datos</button>
         </div>
     </form>
+
     <table>
         <thead>
-            <tr><th>Cédula</th><th>Apellidos y Nombres</th><th>Tipo Asociado</th><th>Fecha Afiliación</th><th>Productos Activos</th></tr>
+            <tr>
+                <th>Cédula</th>
+                <th>Apellidos y Nombres</th>
+                <th>Fecha Afiliación</th>
+                <th>Agencia</th>
+                <th>Estado</th>
+                <th>Cuentas de Ahorro</th>
+            </tr>
         </thead>
         <tbody>
-            <tr><td colspan="5">No se han aplicado filtros o no existen registros para mostrar</td></tr>
+            {% if asociados %}
+                {% for asoc in asociados %}
+                <tr>
+                    <td><strong>{{ asoc.cedula_pk }}</strong></td>
+                    <td style="text-align: left;">{{ asoc.apellidos }}, {{ asoc.nombres }}</td>
+                    <td>{{ asoc.fech_afil if asoc.fech_afil else 'No registra' }}</td>
+                    <td>{{ asoc.nombre_agencia }}</td>
+                    <td>{{ asoc.estado }}</td>
+                    <td><span style="font-weight: bold; color: #004c99;">{{ asoc.productos_activos }}</span></td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="6" style="color: #666; padding: 25px;">
+                        {% if busqueda_realizada %}
+                            No se encontraron asociados que coincidan con la búsqueda.
+                        {% else %}
+                            Seleccione los filtros y haga clic en "Filtrar Datos".
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endif %}
         </tbody>
     </table>
 </div>
+
 {% endblock %}
