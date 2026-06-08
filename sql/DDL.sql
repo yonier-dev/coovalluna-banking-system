@@ -189,3 +189,16 @@ create table REALIZA (
   	CONSTRAINT fk_realiza_asociado FOREIGN KEY (cedulaAsociado_fk) REFERENCES ASOCIADO(cedula_pk),
   	CONSTRAINT fk_realiza_movimiento FOREIGN KEY (num_transaccionMov_fk) REFERENCES MOVIMIENTO(num_transaccion_pk)
 );
+
+--Tabla para solicitudes del asociado que quiere cambiar algunos datos
+CREATE TABLE SOLICITUD_ACTUALIZACION (
+    id_solicitud SERIAL PRIMARY KEY,
+    cedula_asociado_fk VARCHAR(20) NOT NULL,
+    telefono_nuevo VARCHAR(20),
+    correo_nuevo VARCHAR(100),
+    direccion_nueva VARCHAR(150),
+    estado VARCHAR(20) DEFAULT 'pendiente',
+
+    FOREIGN KEY (cedula_asociado_fk)
+        REFERENCES ASOCIADO(cedula_pk)
+);

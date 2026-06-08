@@ -73,54 +73,33 @@
 
     .botones {
         display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
+        flex-direction: row; /* Fuerza a que se alineen en una fila */
+        flex-wrap: wrap; /* Permite que bajen de línea solo si la pantalla es muy pequeña */
+        gap: 20px; /* Espacio limpio entre los botones */
         justify-content: center;
         margin-bottom: 30px;
     }
 
     .btn {
-        width: auto;
-        padding: 12px 20px;
+        padding: 12px 25px;
         border-radius: 8px;
         border: none;
         cursor: pointer;
         font-weight: bold;
-        transition: 0.3s;
+        font-size: 15px; /* Un tamaño de letra un poco más legible */
+        background: #007acc;
+        color: white;
+        min-width: 180px; /* Hace que todos los botones tengan un tamaño similar */
+        width: auto; /* Anula cualquier 100% de ancho que venga de otro lado */
+        text-align: center;
+        transition: transform 0.2s ease, background 0.3s ease, box-shadow 0.2s ease;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1); /* Sombra suave para dar relieve */
     }
 
     .btn:hover {
-        box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-    }
-
-    .registrar {
-        background: #007acc;
-        color: white;
-    }
-
-    .modificar {
-        background: #007acc;
-        color: white;
-    }
-
-    .agencia {
-        background: #007acc;
-        color: white;
-    }
-
-    .estado {
-        background: #007acc;
-        color: white;
-    }
-
-    .buscar {
-        background: #007acc;
-        color: white;
-    }
-
-    .limpiar {
-        background: #007acc;
-        color: white;
+        background: #004c99;
+        transform: translateY(-3px); /* Da un pequeño "salto" hacia arriba al pasar el mouse */
+        box-shadow: 0 6px 15px rgba(0,0,0,0.2); /* La sombra crece en el hover */
     }
 
     table {
@@ -160,92 +139,13 @@
 
     <h2>Administración de Empleados</h2>
 
-    <div class="form-grid">
-
-        <div class="campo">
-            <label>Cédula</label>
-            <input type="text" name="cedula">
-        </div>
-
-        <div class="campo">
-            <label>Nombre</label>
-            <input type="text" name="nombre">
-        </div>
-
-        <div class="campo">
-            <label>Apellido</label>
-            <input type="text" name="apellido">
-        </div>
-
-        <div class="campo">
-            <label>Cargo</label>
-            <select name="cargo">
-                <option value="">Seleccione</option>
-                <option>Promotor</option>
-                <option>Atención Público</option>
-                <option>Director Agencia</option>
-            </select>
-        </div>
-
-        <div class="campo">
-            <label>Salario</label>
-            <input type="number" name="salario">
-        </div>
-
-        <div class="campo">
-            <label>Agencia</label>
-            <select name="agencia">
-                <option>Tuluá</option>
-            </select>
-        </div>
-
-        <div class="campo">
-            <label>Teléfono</label>
-            <input type="text" name="telefono">
-        </div>
-
-        <div class="campo">
-            <label>Estado</label>
-            <select name="estado">
-                <option value="">Seleccione</option>
-                <option>Activo</option>
-                <option>En Licencia</option>
-                <option>Retirado</option>
-            </select>
-        </div>
-
-        <div class="campo">
-            <label>Correo</label>
-            <input type="email" name="correo">
-        </div>
-
-    </div>
-
     <div class="botones">
 
-        <button class="btn registrar">
-            Registrar Empleado
-        </button>
-
-        <button class="btn modificar">
-            Modificar Cargo
-        </button>
-
-        <button class="btn agencia">
-            Cambiar Agencia
-        </button>
-
-        <button class="btn estado">
-            Cambiar Estado
-        </button>
-
-        <button class="btn buscar">
-            Buscar Empleado
-        </button>
-
-        <button class="btn limpiar">
-            Limpiar Campos
-        </button>
+        <a href="/admin/empleados/registrar-empleado" class="btn crear">Registrar Empleado</a>
+        <a href="/admin/empleados/modificar-cargo" class="btn modificar">Modificar Cargo</a>
+        <a href="/admin/empleados/cambiar-agencia" class="btn cambiar">Cambiar Agencia</a>
+        <a href="/admin/empleados/buscar-empleado" class="btn buscar">Buscar Empleado</a>
+        <a href="/admin/empleados/desactivar-empleado" class="btn desactivar">Desactivar Empleado</a>
 
     </div>
 

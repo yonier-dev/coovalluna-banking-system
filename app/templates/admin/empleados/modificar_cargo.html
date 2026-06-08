@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+{% block contenido %}
+
+<style>
+    body {
+        background: #f4f7fb;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        min-height: 100vh;
+        margin: 0;
+    }
+
+    .header {
+        background: linear-gradient(90deg, #004c99, #007acc);
+        color: white;
+        padding: 20px;
+        text-align: center;
+        font-size: 22px;
+        font-weight: bold;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        box-sizing: border-box;
+        width: 100%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 10;
+    }
+
+    .logout { position: absolute; top: 20px; right: 30px; color: white; text-decoration: none; font-size: 14px; }
+    .back { position: absolute; top: 20px; left: 30px; color: white; text-decoration: none; font-size: 14px; }
+
+    .container {
+        margin-top: 100px;
+        margin-bottom: 30px;
+        width: 90%;
+        max-width: 650px;
+        box-sizing: border-box;
+    }
+
+    .card-panel {
+        background: white;
+        border: 3px solid #004c99;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        margin-bottom: 25px;
+    }
+
+    h2, h3 {
+        text-align: center;
+        color: #004c99;
+        margin-top: 0;
+        margin-bottom: 20px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 15px;
+    }
+
+    label {
+        font-weight: bold;
+        color: #004c99;
+    }
+
+    /* Regla Flexbox 80/20 Corregida */
+    .search-input-group {
+        display: flex !important;
+        gap: 15px !important;
+        width: 100% !important;
+        align-items: center !important;
+        box-sizing: border-box !important;
+    }
+
+    .search-input-group input {
+        flex: 4 !important;
+        padding: 12px !important;
+        border: 2px solid #007acc !important;
+        border-radius: 8px !important;
+        font-size: 15px !important;
+        box-sizing: border-box !important;
+    }
+
+    .search-input-group .btn-search {
+        flex: 1 !important;
+        padding: 12px 20px !important;
+        background: linear-gradient(90deg, #004c99, #007acc) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 8px !important;
+        font-weight: bold !important;
+        white-space: nowrap !important;
+        cursor: pointer;
+    }
+
+    .form-select {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #007acc;
+        border-radius: 8px;
+        font-size: 15px;
+        background-color: white;
+    }
+
+    .info-status {
+        background: #f8fbff;
+        border: 1px solid #007acc;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+
+    .info-line { margin-bottom: 8px; font-size: 15px; }
+
+    .status-badge {
+        padding: 3px 8px;
+        border-radius: 6px;
+        font-weight: bold;
+        font-size: 13px;
+        background: #eef4ff;
+        color: #004c99;
+        border: 1px solid #004c99;
+    }
+
+    .btn-update {
+        background: #00875a !important;
+        width: 100%;
+        padding: 14px;
+        font-size: 16px;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .btn-update:hover { background: #006644 !important; }
+
+    .alert {
+        padding: 12px;
+        border-radius: 8px;
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .alert-error { background: #ffe6e6; color: #cc0000; border: 1px solid #cc0000; }
+    .alert-success { background: #e6ffa0; color: #006600; border: 1px solid #006600; }
+</style>
+
+<div class="header">
+    Gestión de Cargos Administrativos
+    <a href="/admin/gestion-empleados" class="back">← Volver</a>
+    <a href="/logout" class="logout">Cerrar sesión</a>
+</div>
+
+<div class="container">
+
+    {% if error %}
+        <div class="alert alert-error">⚠️ {{ error }}</div>
+    {% endif %}
+
+    {% if exito %}
+        <div class="alert alert-success">✅ {{ exito }}</div>
+    {% endif %}
+
+    <div class="card-panel">
+        <h2>Modificar Cargo de Empleado</h2>
+        <form method="GET" action="{{ url_for('admin.modificar_cargo') }}">
+            <div class="form-group">
+                <label for="cedula">Cédula del Empleado</label>
+                <div class="search-input-group">
+                    <input id="cedula" name="cedula" type="text" placeholder="Ej: 11062345" 
+                           value="{{ empleado.cedula if empleado else request.args.get('cedula', '') }}" required>
+                    <button type="submit" class="btn-search">Buscar</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    {% if empleado %}
+    <div class="card-panel">
+        <h3>Actualizar Información Laboral</h3>
+
+        <div class="info-status">
+            <div class="info-line"><strong>Nombre:</strong> {{ empleado.nombres }} {{ empleado.apellidos }}</div>
+            <div class="info-line"><strong>Agencia Actual:</strong> {{ empleado.agencia }}</div>
+            <div class="info-line">
+                <strong>Cargo Actual:</strong> 
+                <span class="status-badge">{{ empleado.cargo_actual }}</span>
+            </div>
+        </div>
+
+        <form method="POST" action="{{ url_for('admin.modificar_cargo') }}">
+            <input type="hidden" name="cedula_empleado" value="{{ empleado.cedula }}">
+            
+            <div class="form-group">
+                <label for="cod_cargo_fk">Seleccione el Nuevo Cargo</label>
+                <select id="cod_cargo_fk" name="cod_cargo_fk" class="form-select" required>
+                    <option value="" disabled>-- Elija un cargo de la lista --</option>
+                    <option value="C01">Director Regional</option>
+                    <option value="C02">Director Agencia</option>
+                    <option value="C03" selected>Asesor Comercial</option> 
+                    <option value="C04">Cajero</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn-update" style="margin-top: 15px;">
+                Confirmar Cambio de Cargo
+            </button>
+        </form>
+    </div>
+    {% endif %}
+
+</div>
+
+{% endblock %}

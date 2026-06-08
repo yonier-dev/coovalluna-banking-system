@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+{% block contenido %}
+
+<style>
+    body {
+        background: #f4f7fb;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        min-height: 100vh;
+        margin: 0;
+    }
+
+    .header {
+        background: linear-gradient(90deg, #004c99, #007acc);
+        color: white;
+        padding: 20px;
+        text-align: center;
+        font-size: 22px;
+        font-weight: bold;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        box-sizing: border-box;
+        width: 100%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 10;
+    }
+
+    .logout { position: absolute; top: 20px; right: 30px; color: white; text-decoration: none; font-size: 14px; }
+    .back { position: absolute; top: 20px; left: 30px; color: white; text-decoration: none; font-size: 14px; }
+
+    .container {
+        margin-top: 100px;
+        margin-bottom: 30px;
+        width: 90%;
+        max-width: 650px;
+        box-sizing: border-box;
+    }
+
+    .card-panel {
+        background: white;
+        border: 3px solid #004c99;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        margin-bottom: 25px;
+    }
+
+    h2, h3 {
+        text-align: center;
+        color: #004c99;
+        margin-top: 0;
+        margin-bottom: 20px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 15px;
+    }
+
+    label {
+        font-weight: bold;
+        color: #004c99;
+    }
+
+    /* Input group corregido contra colapsos */
+    .search-input-group {
+        display: flex !important;
+        gap: 15px !important;
+        width: 100% !important;
+        align-items: center !important;
+        box-sizing: border-box !important;
+    }
+
+    .search-input-group input {
+        flex: 4 !important; /* Le da el 80% del ancho disponible al campo de texto */
+        padding: 12px !important;
+        border: 2px solid #007acc !important;
+        border-radius: 8px !important;
+        font-size: 15px !important;
+        box-sizing: border-box !important;
+        min-width: 0 !important; /* Evita que el navegador colapse el input */
+    }
+
+    .search-input-group input:focus {
+        border-color: #004c99 !important;
+        outline: none !important;
+    }
+
+    .search-input-group .btn {
+        flex: 1 !important; /* El botón solo ocupa el 20% restante */
+        padding: 12px 20px !important;
+        background: linear-gradient(90deg, #004c99, #007acc) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 8px !important;
+        font-size: 15px !important;
+        cursor: pointer !important;
+        font-weight: bold !important;
+        white-space: nowrap !important; /* Evita que el texto "Buscar" se divida */
+        transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+    }
+
+    .btn {
+        padding: 12px 20px;
+        background: linear-gradient(90deg, #004c99, #007acc);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 15px;
+        cursor: pointer;
+        font-weight: bold;
+        white-space: nowrap;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+
+    /* Estilos de información y badges */
+    .info-status {
+        background: #f8fbff;
+        border: 1px solid #007acc;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+
+    .info-line { margin-bottom: 8px; font-size: 15px; }
+    .info-line:last-child { margin-bottom: 0; }
+
+    .status-badge {
+        padding: 3px 8px;
+        border-radius: 6px;
+        font-weight: bold;
+        font-size: 13px;
+    }
+    .badge-activo { background: #e6fffa; color: #047481; border: 1px solid #047481; }
+    .badge-bloqueado { background: #ffe6e6; color: #cc0000; border: 1px solid #cc0000; }
+
+    /* Botones de acción final mas llamativos */
+    .btn-danger { background: #cc0000 !important; width: 100%; padding: 14px; font-size: 16px; color: white;}
+    .btn-danger:hover { background: #990000 !important; }
+    
+    .btn-success { background: #00875a !important; width: 100%; padding: 14px; font-size: 16px; color: white;}
+    .btn-success:hover { background: #006644 !important; }
+
+    /* Alertas */
+    .alert {
+        padding: 12px;
+        border-radius: 8px;
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .alert-error { background: #ffe6e6; color: #cc0000; border: 1px solid #cc0000; }
+    .alert-success { background: #e6ffa0; color: #006600; border: 1px solid #006600; }
+</style>
+
+<div class="header">
+    Control de Estado de Empleados
+    <a href="/admin/gestion-empleados" class="back">← Volver</a>
+    <a href="/logout" class="logout">Cerrar sesión</a>
+</div>
+
+<div class="container">
+
+    {% if error %}
+        <div class="alert alert-error">⚠️ {{ error }}</div>
+    {% endif %}
+
+    {% if mensaje %}
+        <div class="alert alert-success">✅ {{ mensaje }}</div>
+    {% endif %}
+
+    <div class="card-panel">
+        <h2>Inhabilitar / Activar Empleado</h2>
+        <form method="GET" action="/admin/empleados/desactivar-empleado">
+            <div class="form-group">
+                <label for="cedula">Cédula del Empleado</label>
+                <div class="search-input-group">
+                    <input id="cedula" name="cedula" type="text" placeholder="Ej: 11062345" value="{{ request.args.get('cedula', '') }}" required>
+                    <button type="submit" class="btn">Buscar</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    {% if empleado %}
+    <div class="card-panel">
+        <h3>Modificar Permisos de Acceso</h3>
+
+        <div class="info-status">
+            <div class="info-line"><strong>Nombre:</strong> {{ empleado.nombre_completo }}</div>
+            <div class="info-line"><strong>Cargo Actual:</strong> {{ empleado.cargo }}</div>
+            <div class="info-line">
+                <strong>Estado en Plataforma:</strong> 
+                {% if empleado.bloqueado %}
+                    <span class="status-badge badge-bloqueado">🔒 BLOQUEADO / INACTIVO</span>
+                {% else %}
+                    <span class="status-badge badge-activo">🔓 PERMITIDO / ACTIVO</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <form method="POST" action="/admin/empleados/desactivar-empleado">
+            <input type="hidden" name="cedula" value="{{ empleado.cedula }}">
+            
+            {% if empleado.bloqueado %}
+                <input type="hidden" name="accion" value="desbloquear">
+                <button type="submit" class="btn btn-success">Reactivar Acceso del Empleado</button>
+            {% else %}
+                <input type="hidden" name="accion" value="bloquear">
+                <button type="submit" class="btn btn-danger" onclick="return confirm('¿Está seguro de que desea retirar los permisos de acceso a este empleado?');">
+                    Desactivar y Bloquear Empleado
+                </button>
+            {% endif %}
+        </form>
+    </div>
+    {% endif %}
+
+</div>
+
+{% endblock %}
