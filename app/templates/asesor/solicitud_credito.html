@@ -112,6 +112,18 @@
 
 <div class="credito-box">
     <h2>Formulario de Solicitud</h2>
+
+    {% if mensaje %}
+    <div style="color:green; font-weight:bold; text-align:center; margin-bottom:15px;">
+        {{ mensaje }}
+    </div>
+    {% endif %}
+
+    {% if error %}
+    <div style="color:red; font-weight:bold; text-align:center; margin-bottom:15px;">
+        {{ error }}
+    </div>
+    {% endif %}
     <form id="creditoForm" class="form-grid" method="POST">
       <div>
         <label for="cedula">Cédula del Asociado</label>
@@ -159,7 +171,7 @@
     </form>
 </div>
 
-<script>
+<!--<script>
     const form = document.getElementById('creditoForm');
     const errorMsg = document.getElementById('errorMsg');
     const successMsg = document.getElementById('successMsg');
@@ -176,7 +188,7 @@
       const plazo = document.getElementById('plazo').value.trim();
       const tasa = document.getElementById('tasa').value.trim();
       const linea = document.getElementById('linea').value;
-      const fecha = document.getElementById('fecha').value;
+      const fecha = document.getElementById('fechaCodeudor').value;
 
       if (cedula !== "" && valor !== "" && plazo !== "" && tasa !== "" && linea !== "" && fecha !== "") {
         errorMsg.style.display = "none";
@@ -189,5 +201,5 @@
         errorMsg.style.display = "block";
       }
     });
-</script>
+</script>-->
 {% endblock %}

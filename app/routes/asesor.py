@@ -1224,14 +1224,206 @@ def transferencia():
         if conn:
             conn.close()
 
-# NO IMPLEMENTADA
+# IMPLEMENTADA
 @asesor_bp.route('/asesor/solicitud-credito', methods=['GET', 'POST'])
 def solicitud_credito():
-    # GET → muestra formulario para radicar crédito.
-    # POST → inserta nuevo crédito con valor solicitado, plazo, tasa y línea de crédito.
-    # El sistema genera automáticamente el número de radicado.
-    # Si hay codeudor, registrar su cédula y fecha de firma del pagaré.
-    return render_template('asesor/solicitud_credito.html')
+
+    if session.get('perfil') != 'asesor':
+        return redirect(url_for('auth.login'))
+
+    if request.method == 'GET':
+        return render_template('asesor/solicitud_credito.html')
+    
+    print("Entró a solicitud_credito()")
+
+    conn = None
+    cur = None
+
+    try:
+
+        cedula = request.form['cedula']
+        valor = float(request.form['valor'])
+        plazo = int(request.form['plazo'])
+        tasa = float(request.form['tasa'])
+        linea = request.form['linea']
+
+        codeudor = request.form.get('codeudor', '').strip()
+        fecha_firma = request.form.get('fechaCodeudor', '').strip()
+
+        conn = get_conexion()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        #obtiene agencia del asesor
+        cur.execute("""
+            SELECT CodigoAgencia_fk
+            FROM EMPLEADO
+            WHERE Cedula_pk = %s
+        """, (session['cedula'],))
+
+        asesor = cur.fetchone()
+
+        if not asesor:
+            return render_template(
+                'asesor/solicitud_credito.html',
+                error='No se encontró la agencia del asesor'
+            )
+
+        codigo_agencia = asesor['codigoagencia_fk']
+
+        # verifica que el asociado este activo y que exista
+        cur.execute("""
+            SELECT *
+            FROM ASOCIADO
+            WHERE cedula_pk = %s
+            AND LOWER(estado) = 'activo'
+        """, (cedula,))
+
+        asociado = cur.fetchone()
+
+        if not asociado:
+            return render_template(
+                'asesor/solicitud_credito.html',
+                error='El asociado no existe o no se encuentra activo'
+            )
+
+        # valida el valor solicitado
+        if valor <= 0:
+            return render_template(
+                'asesor/solicitud_credito.html',
+                error='El valor solicitado debe ser mayor a cero'
+            )
+
+        # valida el plazo en meses
+        if plazo <= 0:
+            return render_template(
+                'asesor/solicitud_credito.html',
+                error='El plazo debe ser mayor a cero'
+            )
+
+        # valida la tasa de intereses
+        if tasa <= 0:
+            return render_template(
+                'asesor/solicitud_credito.html',
+                error='La tasa debe ser mayor a cero'
+            )
+
+        # valida el codeudor si es que fue ingresado
+        if codeudor:
+
+            cur.execute("""
+                SELECT *
+                FROM ASOCIADO
+                WHERE cedula_pk = %s
+                AND LOWER(estado) = 'activo'
+            """, (codeudor,))
+
+            existe_codeudor = cur.fetchone()
+
+            if not existe_codeudor:
+                return render_template(
+                    'asesor/solicitud_credito.html',
+                    error='El codeudor no existe o no está activo'
+                )
+
+            if codeudor == cedula:
+                return render_template(
+                    'asesor/solicitud_credito.html',
+                    error='El asociado no puede ser su propio codeudor'
+                )
+
+            if not fecha_firma:
+                return render_template(
+                    'asesor/solicitud_credito.html',
+                    error='Debe registrar la fecha de firma del pagaré'
+                )
+
+        import uuid
+
+        radicado = "CR-" + str(uuid.uuid4())[:12]
+
+        # crea un credito
+        cur.execute("""
+            INSERT INTO CREDITO(
+                Num_radicado_pk,
+                Estado,
+                valor_solicitado,
+                plazo_meses,
+                Tasa_interes_m,
+                Linea_credito,
+                codigo_agencia_fk
+            )
+            VALUES (%s,%s,%s,%s,%s,%s,%s)
+        """, (
+            radicado,
+            'PENDIENTE',
+            valor,
+            plazo,
+            tasa,
+            linea,
+            codigo_agencia
+        ))
+
+        # relacion de asociado y credito
+        cur.execute("""
+            INSERT INTO SOLICITA(
+                CedulaAsociado_fk,
+                Num_radicadoCredito_fk
+            )
+            VALUES (%s,%s)
+        """, (
+            cedula,
+            radicado
+        ))
+
+        # registra codeudor si fue ingresado
+        if codeudor:
+
+            cur.execute("""
+                INSERT INTO ES_CODEUDOR(
+                    CedulaAsociado_fk,
+                    Num_radicadoCredito_fk,
+                    Fecha_Firma
+                )
+                VALUES (%s,%s,%s)
+            """, (
+                codeudor,
+                radicado,
+                fecha_firma
+            ))
+
+        conn.commit()
+
+        print("===================================")
+        print("SOLICITUD REGISTRADA CORRECTAMENTE")
+        print("Radicado:", radicado)
+        print("Asociado:", cedula)
+        print("Valor:", valor)
+        print("===================================")
+
+        return render_template(
+            'asesor/solicitud_credito.html',
+            mensaje=f'Solicitud registrada correctamente. Radicado: {radicado}'
+        )
+
+    except Exception as e:
+
+        print("\n========== ERROR SOLICITUD CRÉDITO ==========")
+        print(type(e))
+        print(e)
+        print("=============================================\n")
+
+        return render_template(
+            'asesor/solicitud_credito.html',
+            error=f'Error: {str(e)}'
+        )
+
+    finally:
+
+        if cur:
+            cur.close()
+
+        if conn:
+            conn.close()
 
 
 # NO IMPLEMENTADA
