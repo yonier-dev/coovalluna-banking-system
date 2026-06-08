@@ -865,14 +865,143 @@ def deposito():
             conn.close()
 
 
-# NO IMPLEMENTADA
+# IMPLEMENTADA
+@asesor_bp.route('/asesor/retiro', methods=['GET', 'POST'])
 @asesor_bp.route('/asesor/retiro', methods=['GET', 'POST'])
 def retiro():
-    # GET → muestra formulario para registrar retiro.
-    # POST → valida que el saldo calculado sea suficiente antes de realizar el retiro.
-    # Si el saldo es insuficiente, mostrar mensaje de error y no registrar el movimiento.
-    return render_template('asesor/retiro.html')
 
+    if session.get('perfil') != 'asesor':
+        return redirect(url_for('auth.login'))
+
+    if request.method == 'GET':
+        return render_template('asesor/retiro.html')
+
+    conn = None
+    cur = None
+
+    try:
+
+        cedula = request.form.get('cedula')
+        numero_cuenta = request.form.get('cuenta')
+        valor = float(request.form.get('valor'))
+        canal = request.form.get('canal')
+
+        if valor <= 0:
+            return render_template(
+                'asesor/retiro.html',
+                error='El valor debe ser mayor que cero'
+            )
+
+        conn = get_conexion()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        # Agencia del asesor
+        cur.execute("""
+            SELECT CodigoAgencia_fk
+            FROM EMPLEADO
+            WHERE Cedula_pk = %s
+        """, (session['cedula'],))
+
+        asesor = cur.fetchone()
+
+        if not asesor:
+            return render_template(
+                'asesor/retiro.html',
+                error='No se encontró la información del asesor'
+            )
+
+        agencia = asesor['codigoagencia_fk']
+
+        # Verificar cuenta
+        cur.execute("""
+            SELECT *
+            FROM CUENTA_AHORRO
+            WHERE Numero_pk = %s
+            AND cedula_asociado_fk = %s
+            AND CodigoAgencia_fk = %s
+        """, (
+            numero_cuenta,
+            cedula,
+            agencia
+        ))
+
+        cuenta = cur.fetchone()
+
+        if not cuenta:
+            return render_template(
+                'asesor/retiro.html',
+                error='La cuenta no existe o no pertenece a su agencia'
+            )
+
+        # Obtener saldo actual
+        cur.execute("""
+            SELECT saldo
+            FROM MOVIMIENTO
+            WHERE cuenta_a_la_que_pertenece = %s
+            ORDER BY fecha_hora DESC
+            LIMIT 1
+        """, (numero_cuenta,))
+
+        ultimo_mov = cur.fetchone()
+
+        saldo_actual = (
+            float(ultimo_mov['saldo'])
+            if ultimo_mov
+            else 0
+        )
+
+        if saldo_actual < valor:
+            return render_template(
+                'asesor/retiro.html',
+                error=f'Saldo insuficiente. Disponible: ${saldo_actual:,.0f}'
+            )
+
+        nuevo_saldo = saldo_actual - valor
+
+        import uuid
+
+        num_transaccion = str(uuid.uuid4())[:20]
+
+        cur.execute("""
+            INSERT INTO MOVIMIENTO(
+                num_transaccion_pk,
+                saldo,
+                tipo_movimiento,
+                canal,
+                valor,
+                cuenta_a_la_que_pertenece
+            )
+            VALUES (%s,%s,%s,%s,%s,%s)
+        """, (
+            num_transaccion,
+            nuevo_saldo,
+            'RETIRO',
+            canal,
+            valor,
+            numero_cuenta
+        ))
+
+        conn.commit()
+
+        return render_template(
+            'asesor/retiro.html',
+            mensaje=f'Retiro registrado correctamente. Nuevo saldo: ${nuevo_saldo:,.0f}'
+        )
+
+    except Exception as e:
+
+        return render_template(
+            'asesor/retiro.html',
+            error=f'Error: {str(e)}'
+        )
+
+    finally:
+
+        if cur:
+            cur.close()
+
+        if conn:
+            conn.close()
 
 # NO IMPLEMENTADA
 @asesor_bp.route('/asesor/transferencia', methods=['GET', 'POST'])
