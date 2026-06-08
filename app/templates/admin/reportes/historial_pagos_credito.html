@@ -1,8 +1,7 @@
 {% extends "base.html" %}
 {% block contenido %}
-
 <style>
-    body {
+   body {
         background: #f4f7fb;
     }
 
@@ -43,7 +42,6 @@
         font-size: 16px;
     }
 
-    /* Malla de 7 botones/tarjetas de reportes */
     .grid-reportes {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -108,60 +106,23 @@
         font-size: 14px;
     }
 </style>
-
 <div class="header">
-    Módulo de Analítica y Reportes
-    <a href="/admin/dashboard" class="back">← Volver </a>
-    <a href="/logout" class="logout">Cerrar sesión</a>
+    Reporte 5: Historial de Pagos de Obligación
+    <a href="/admin/reportes" class="back">← Cambiar Reporte</a>
 </div>
-
 <div class="container">
-    <h2>Generacion de Reportes</h2>
-    <p class="subtitle">Seleccione el reporte analítico que desea consultar o filtrar del sistema.</p>
-
-    <div class="grid-reportes">
-        <a href="/admin/reportes/asociados-estado-agencia" class="card-reporte">
-            <div class="numero">1</div>
-            <h3>Asociados por Estado y Agencia</h3>
-            <div class="btn-entrar">Ingresar →</div>
-        </a>
-
-        <a href="/admin/reportes/extracto-cuenta-ahorro" class="card-reporte">
-            <div class="numero">2</div>
-            <h3>Extracto de Cuenta de Ahorro</h3>
-            <div class="btn-entrar">Ingresar →</div>
-        </a>
-
-        <a href="/admin/reportes/estado-cartera" class="card-reporte">
-            <div class="numero">3</div>
-            <h3>Estado de Cartera</h3>
-            <div class="btn-entrar">Ingresar →</div>
-        </a>
-
-        <a href="/admin/reportes/asociados-en-mora" class="card-reporte">
-            <div class="numero">4</div>
-            <h3>Asociados en Mora</h3>
-            <div class="btn-entrar">Ingresar →</div>
-        </a>
-
-        <a href="/admin/reportes/historial-pagos-credito" class="card-reporte">
-            <div class="numero">5</div>
-            <h3>Historial de Pagos de Crédito</h3>
-            <div class="btn-entrar">Ingresar →</div>
-        </a>
-
-        <a href="/admin/reportes/productividad-asesores" class="card-reporte">
-            <div class="numero">6</div>
-            <h3>Productividad de Asesores</h3>
-            <div class="btn-entrar">Ingresar →</div>
-        </a>
-
-        <a href="/admin/reportes/codeudoria-activa" class="card-reporte">
-            <div class="numero">7</div>
-            <h3>Asociados con Codeudoría Activa</h3>
-            <div class="btn-entrar">Ingresar →</div>
-        </a>
-    </div>
+    <h2>Localizar Obligación Crediticia</h2>
+    <form method="GET">
+        <div class="search-input-group" style="display:flex; gap:10px; margin-bottom: 25px;">
+            <input type="text" name="id_credito" placeholder="Ingrese el código o número del pagaré/crédito..." required style="flex:4; padding:10px;">
+            <button type="submit" class="btn" style="flex:1;">Buscar Plan</button>
+        </div>
+    </form>
+    <table>
+        <thead>
+            <tr><th>N° Cuota</th><th>Vencimiento Programado</th><th>Fecha Real Pago</th><th>Valor Satisfecho</th><th>Estado Cuota</th></tr>
+        </thead>
+        <tbody><tr><td colspan="5">Consulte un número de obligación para auditar la amortización</td></tr></tbody>
+    </table>
 </div>
-
 {% endblock %}

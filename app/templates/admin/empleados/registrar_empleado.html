@@ -185,7 +185,7 @@
                     <select id="cod_cargo_fk" name="cod_cargo_fk" required>
                         <option value="" disabled selected>-- Seleccione Rol --</option>
                         {% for cargo in cargos %}
-                            <option value="{{ cargo.cod_cargo_pk }}">{{ cargo.Nombre }}</option>
+                            <option value="{{ cargo.cod_cargo_pk }}">{{ cargo.nombre }}</option>
                         {% endfor %}
                     </select>
                 </div>
