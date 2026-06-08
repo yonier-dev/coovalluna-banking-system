@@ -1,5 +1,3 @@
--- esto es un ejemplo para trabajar el desarrollo de la aplicacion, toca despues hacerlos a mano
-
 -- =====================
 -- AGENCIAS (3)
 -- =====================
