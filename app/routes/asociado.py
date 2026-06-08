@@ -116,12 +116,13 @@ def cuentas():
         parametros.append(fecha_inicio)   #Y agrega fragmentos de esas consultas dentro de la condicion where
 
     if fecha_fin:
-        sql += " AND DATE(M.FECHA_HORA) <= %s"
+        sql += " AND DATE(M.FECHA_HORA) <= %s"#DATE(M.FECHA_HORA) extrae solamente la fecha en este caso
         parametros.append(fecha_fin)
 
     if canal:
         sql += " AND M.CANAL = %s"
-        parametros.append(canal)
+        parametros.append(canal)  #Se pone el append para garantizar que se arme la tupla(cedula,canal) en este caso 
+                                  #se hace con el objetivo de que funcione adecuadamente la consulta porque se requieren dos valores para funcionar
 
     sql += " ORDER BY M.FECHA_HORA DESC"
 
@@ -279,32 +280,73 @@ def descargar_credito():
     # retornar el archivo como descarga con send_file
     pass
 
-# NO IMPLEMENTADA
+#  IMPLEMENTADA
 
 @asociado_bp.route('/asociado/actualizar-datos', methods=['GET', 'POST'])
 def actualizar_datos():
     if session.get('perfil') != 'asociado':
         return redirect(url_for('auth.login'))
+    cedula= session['cedula']
 
-    # GET: mostrar formulario con telefono, correo y direccion actuales
-    # POST: registrar solicitud como pendiente, no aplicar cambio de inmediato
-    # un asesor es quien aprueba o rechaza la solicitud
-    # mostrar el estado actual de la solicitud: pendiente, aprobada o rechazada
-    # tener en cuenta variables del .html
+    conn = get_conexion()
+    cur = conn.cursor()
+    #Consulta que busca algunos atributos de la tabla asociado
+    cur.execute("""
+      select cedula_pk,
+      telefono,correo,direccion from asociado
+      where cedula_pk= %s
+                """,(cedula,))
+     #Guardo datos en diccionario. 
+    asociado=None
+    for a in cur.fetchall():
+        asociado = {
+        'cedula_pk': a[0],
+        'telefono': a[1],
+        'correo': a[2],
+        'direccion': a[3]
+        }
+    
 
-    # mandar al html: datos del asociado, solicitud con su estado si existe
-
-    # datos vacios mientras el backend no esta listo
-    asociado = {
-        'cedula_pk': '',
-        'nombres': '',
-        'apellidos': '',
-        'telefono': '',
-        'correo': '',
-        'direccion': ''
-    }
+    if request.method == 'POST':
+        telefono = request.form['telefono']
+        correo = request.form['correo']
+        direccion = request.form['direccion']
+     #Consulta SQL donde se insertan los datos ala tabla de solicitudes del asociado con respecto a la modificacion de unos datos personales
+        cur.execute(""" 
+        INSERT INTO SOLICITUD_ACTUALIZACION
+        (
+        cedula_asociado_fk,
+        telefono_nuevo,
+        correo_nuevo,
+        direccion_nueva
+        )
+        VALUES (%s,%s,%s,%s)
+        """,
+        (
+        cedula, 
+        telefono,
+        correo,
+        direccion
+        ))
+        conn.commit()#Para guardar cambios en la nube de la base de datos
+    
+    cur.execute("""
+    SELECT estado
+    FROM SOLICITUD_ACTUALIZACION
+    WHERE cedula_asociado_fk = %s
+    LIMIT 1
+     """ , (cedula,)) #LIMIT garantiza consultar la mas reciente
+    
+    solicitud = None
+    for s in cur.fetchall():
+        solicitud = { #Se guarda solicitud de la consulta hecha
+        'estado': s[0]
+        }
+    
+    cur.close()
+    conn.close()
 
     return render_template('asociado/actualizar_datos.html',    
                          asociado=asociado,
-                         solicitud=None,
+                         solicitud=solicitud,
                          mensaje=None)
