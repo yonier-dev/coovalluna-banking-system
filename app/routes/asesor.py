@@ -1003,16 +1003,226 @@ def retiro():
         if conn:
             conn.close()
 
-# NO IMPLEMENTADA
+# IMPLEMENTADA
 @asesor_bp.route('/asesor/transferencia', methods=['GET', 'POST'])
 def transferencia():
-    # GET → muestra formulario con cuentas origen y destino.
-    # POST → registra dos movimientos simultáneos:
-    #   - En cuenta origen: “transferencia saliente”
-    #   - En cuenta destino: “transferencia entrante”
-    # Ambos movimientos deben tener misma fecha, hora y valor.
-    return render_template('asesor/transferencia.html')
 
+    if session.get('perfil') != 'asesor':
+        return redirect(url_for('auth.login'))
+
+    if request.method == 'GET':
+        return render_template('asesor/transferencia.html')
+
+    conn = None
+    cur = None
+
+    try:
+
+        cedula = request.form['cedula'].strip()
+        cuenta_origen = request.form['cuentaOrigen'].strip()
+        cuenta_destino = request.form['cuentaDestino'].strip()
+        valor = float(request.form['valor'])
+        canal = request.form['canal']
+
+        print("\n========== DATOS RECIBIDOS ==========")
+        print("CEDULA =", repr(cedula))
+        print("ORIGEN =", repr(cuenta_origen))
+        print("DESTINO =", repr(cuenta_destino))
+        print("=====================================\n")
+
+        conn = get_conexion()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        # VALIDAR CUENTA ORIGEN
+        cur.execute("""
+            SELECT *
+            FROM CUENTA_AHORRO
+            WHERE TRIM(Numero_pk) = %s
+              AND TRIM(cedula_asociado_fk) = %s
+              AND LOWER(TRIM(Estado)) IN ('activa','activo')
+        """, (cuenta_origen, cedula))
+
+        origen = cur.fetchone()
+
+        print("\n========== DEBUG ORIGEN ==========")
+        print("Cedula ingresada:", cedula)
+        print("Cuenta origen ingresada:", cuenta_origen)
+        print("Resultado consulta:", origen)
+        print("==================================\n")
+
+        if not origen:
+            return render_template(
+                'asesor/transferencia.html',
+                error='La cuenta origen no existe, no está activa o no pertenece al asociado'
+            )
+        # VALIDAR CUENTA DESTINO
+        cur.execute("""
+            SELECT *
+            FROM CUENTA_AHORRO
+            WHERE TRIM(Numero_pk) = %s
+              AND LOWER(TRIM(Estado)) IN ('activa','activo')
+        """, (cuenta_destino,))
+
+        destino = cur.fetchone()
+
+        print("\n========== DEBUG DESTINO ==========")
+        print(destino)
+        print("===================================\n")
+
+        if not destino:
+            return render_template(
+                'asesor/transferencia.html',
+                error='La cuenta destino no existe o no está activa'
+            )
+
+        # MISMA CUENTA
+        if cuenta_origen == cuenta_destino:
+            return render_template(
+                'asesor/transferencia.html',
+                error='La cuenta origen y destino no pueden ser iguales'
+            )
+
+
+        # CALCULAR SALDO ORIGEN
+        cur.execute("""
+            SELECT COALESCE(
+                SUM(
+                    CASE
+                        WHEN Tipo_Movimiento IN
+                        ('DEPOSITO','TRANSFERENCIA_ENTRANTE')
+                            THEN Valor
+
+                        WHEN Tipo_Movimiento IN
+                        ('RETIRO','TRANSFERENCIA_SALIENTE')
+                            THEN -Valor
+
+                        ELSE 0
+                    END
+                ),
+                0
+            ) AS saldo
+            FROM MOVIMIENTO
+            WHERE cuenta_a_la_que_pertenece = %s
+        """, (cuenta_origen,))
+
+        saldo_actual = float(cur.fetchone()['saldo'])
+
+        print("SALDO ORIGEN =", saldo_actual)
+
+        if saldo_actual < valor:
+            return render_template(
+                'asesor/transferencia.html',
+                error=f'Saldo insuficiente. Disponible: ${saldo_actual:,.0f}'
+            )
+
+        nuevo_saldo_origen = saldo_actual - valor
+
+        # CALCULAR SALDO DESTINp
+        cur.execute("""
+            SELECT COALESCE(
+                SUM(
+                    CASE
+                        WHEN Tipo_Movimiento IN
+                        ('DEPOSITO','TRANSFERENCIA_ENTRANTE')
+                            THEN Valor
+
+                        WHEN Tipo_Movimiento IN
+                        ('RETIRO','TRANSFERENCIA_SALIENTE')
+                            THEN -Valor
+
+                        ELSE 0
+                    END
+                ),
+                0
+            ) AS saldo
+            FROM MOVIMIENTO
+            WHERE cuenta_a_la_que_pertenece = %s
+        """, (cuenta_destino,))
+
+        saldo_destino = float(cur.fetchone()['saldo'])
+
+        print("SALDO DESTINO =", saldo_destino)
+
+        nuevo_saldo_destino = saldo_destino + valor
+
+        import uuid
+
+        transaccion_salida = str(uuid.uuid4())[:30]
+        transaccion_entrada = str(uuid.uuid4())[:30]
+
+        # MOVIMIENTO SALIDA
+        cur.execute("""
+            INSERT INTO MOVIMIENTO(
+                num_transaccion_pk,
+                saldo,
+                tipo_movimiento,
+                canal,
+                valor,
+                cuenta_a_la_que_pertenece,
+                cuenta_origen,
+                cuenta_destino
+            )
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+        """, (
+            transaccion_salida,
+            nuevo_saldo_origen,
+            'TRANSFERENCIA_SALIENTE',
+            canal,
+            valor,
+            cuenta_origen,
+            cuenta_origen,
+            cuenta_destino
+        ))
+
+        # MOVIMIENTO ENTRADA
+        cur.execute("""
+            INSERT INTO MOVIMIENTO(
+                num_transaccion_pk,
+                saldo,
+                tipo_movimiento,
+                canal,
+                valor,
+                cuenta_a_la_que_pertenece,
+                cuenta_origen,
+                cuenta_destino
+            )
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+        """, (
+            transaccion_entrada,
+            nuevo_saldo_destino,
+            'TRANSFERENCIA_ENTRANTE',
+            canal,
+            valor,
+            cuenta_destino,
+            cuenta_origen,
+            cuenta_destino
+        ))
+
+        conn.commit()
+
+        return render_template(
+            'asesor/transferencia.html',
+            mensaje='Transferencia registrada correctamente'
+        )
+
+    except Exception as e:
+
+        print("\n========== ERROR ==========")
+        print(e)
+        print("===========================\n")
+
+        return render_template(
+            'asesor/transferencia.html',
+            error=f'Error: {str(e)}'
+        )
+
+    finally:
+
+        if cur:
+            cur.close()
+
+        if conn:
+            conn.close()
 
 # NO IMPLEMENTADA
 @asesor_bp.route('/asesor/solicitud-credito', methods=['GET', 'POST'])
