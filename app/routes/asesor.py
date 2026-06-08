@@ -933,7 +933,7 @@ def retiro():
                 error='La cuenta no existe o no pertenece a su agencia'
             )
 
-        # Obtener saldo actual
+        # Mira el saldo actual
         cur.execute("""
             SELECT saldo
             FROM MOVIMIENTO
