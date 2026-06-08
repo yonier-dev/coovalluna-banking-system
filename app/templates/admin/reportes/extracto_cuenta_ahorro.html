@@ -1,8 +1,7 @@
 {% extends "base.html" %}
 {% block contenido %}
-
 <style>
-    body {
+   body {
         background: #f4f7fb;
     }
 
@@ -43,7 +42,6 @@
         font-size: 16px;
     }
 
-    /* Malla de 7 botones/tarjetas de reportes */
     .grid-reportes {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -108,60 +106,33 @@
         font-size: 14px;
     }
 </style>
-
 <div class="header">
-    Módulo de Analítica y Reportes
-    <a href="/admin/dashboard" class="back">← Volver </a>
-    <a href="/logout" class="logout">Cerrar sesión</a>
+    Reporte 2: Extracto de Cuenta de Ahorro
+    <a href="/admin/reportes" class="back">← Cambiar Reporte</a>
 </div>
-
 <div class="container">
-    <h2>Generacion de Reportes</h2>
-    <p class="subtitle">Seleccione el reporte analítico que desea consultar o filtrar del sistema.</p>
-
-    <div class="grid-reportes">
-        <a href="/admin/reportes/asociados-estado-agencia" class="card-reporte">
-            <div class="numero">1</div>
-            <h3>Asociados por Estado y Agencia</h3>
-            <div class="btn-entrar">Ingresar →</div>
-        </a>
-
-        <a href="/admin/reportes/extracto-cuenta-ahorro" class="card-reporte">
-            <div class="numero">2</div>
-            <h3>Extracto de Cuenta de Ahorro</h3>
-            <div class="btn-entrar">Ingresar →</div>
-        </a>
-
-        <a href="/admin/reportes/estado-cartera" class="card-reporte">
-            <div class="numero">3</div>
-            <h3>Estado de Cartera</h3>
-            <div class="btn-entrar">Ingresar →</div>
-        </a>
-
-        <a href="/admin/reportes/asociados-en-mora" class="card-reporte">
-            <div class="numero">4</div>
-            <h3>Asociados en Mora</h3>
-            <div class="btn-entrar">Ingresar →</div>
-        </a>
-
-        <a href="/admin/reportes/historial-pagos-credito" class="card-reporte">
-            <div class="numero">5</div>
-            <h3>Historial de Pagos de Crédito</h3>
-            <div class="btn-entrar">Ingresar →</div>
-        </a>
-
-        <a href="/admin/reportes/productividad-asesores" class="card-reporte">
-            <div class="numero">6</div>
-            <h3>Productividad de Asesores</h3>
-            <div class="btn-entrar">Ingresar →</div>
-        </a>
-
-        <a href="/admin/reportes/codeudoria-activa" class="card-reporte">
-            <div class="numero">7</div>
-            <h3>Asociados con Codeudoría Activa</h3>
-            <div class="btn-entrar">Ingresar →</div>
-        </a>
+    <h2>Consultar Cuenta de Ahorros</h2>
+    <form method="GET">
+        <div class="form-grid" style="grid-template-columns: repeat(3, 1fr);">
+            <div class="campo"><label>Número de Cuenta (*)</label><input type="text" name="num_cuenta" required></div>
+            <div class="campo"><label>Fecha Inicio</label><input type="date" name="fecha_inicio"></div>
+            <div class="campo"><label>Fecha Fin</label><input type="date" name="fecha_fin"></div>
+        </div>
+        <div class="botones"><button type="submit" class="btn">Generar Extracto</button></div>
+    </form>
+    <div class="resumen-container">
+        <div class="resumen">
+            <h3>Cálculo de Saldos</h3>
+            <div class="resumen-item"><strong>Total Entradas (Créditos):</strong> $0.00</div>
+            <div class="resumen-item"><strong>Total Salidas (Débitos):</strong> $0.00</div>
+            <div class="resumen-item"><strong>Saldo Neto Calculado:</strong> <span style="color: green; font-weight:bold;">$0.00</span></div>
+        </div>
     </div>
+    <table>
+        <thead>
+            <tr><th>Fecha Movimiento</th><th>Tipo (Débito/Crédito)</th><th>Canal</th><th>Valor</th></tr>
+        </thead>
+        <tbody><tr><td colspan="4">Ingrese un número de cuenta válido para calcular el extracto</td></tr></tbody>
+    </table>
 </div>
-
 {% endblock %}

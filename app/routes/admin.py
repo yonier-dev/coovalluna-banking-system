@@ -660,14 +660,14 @@ def desactivar_empleado():
 
 @admin_bp.route('/admin/empleados/registrar-empleado', methods=['GET', 'POST'])
 def registrar_empleado():
-    # Verificación de sesión de Administrador
+    # Verificacin de sesión de Administrador
     if session.get('perfil') != 'admin':
         return redirect(url_for('auth.login'))
 
     conn = None
     cur = None
 
-    # PASO 1: Cargar formularios desplegables (GET)
+    # Cargar formularios desplegables (GET)
     if request.method == 'GET':
         try:
             conn = get_conexion()
@@ -688,14 +688,13 @@ def registrar_empleado():
             if cur: cur.close()
             if conn: conn.close()
 
-    # PASO 2: Procesar la inserción (POST)
+    # procesar la inserción (POST)
     try:
         cedula = request.form.get('cedula')
         nombres = request.form.get('nombres')
         apellidos = request.form.get('apellidos')
         correo = request.form.get('correo')
         salario = request.form.get('salario')
-        fecha_ingreso = request.form.get('fecha_ingreso')
         tipo_labor = request.form.get('tipo_labor') # 'admin' o 'asesor'
         agencia_id = request.form.get('codigo_agencia_fk')
         cargo_id = request.form.get('cod_cargo_fk')
@@ -779,7 +778,7 @@ def modificar_cargo():
     conn = None
     cur = None
 
-    # PASO 2: Procesar la actualización del cargo (POST)
+    #procesar la actualización del cargo (POST)
     if request.method == 'POST':
         cedula_empleado = request.form.get('cedula_empleado')
         nuevo_cargo_cod = request.form.get('cod_cargo_fk')
@@ -808,7 +807,7 @@ def modificar_cargo():
                 
                 conn.commit()
                 
-                # Redireccionamos pasándole la cédula por GET para mostrar el cambio reflejado inmediatamente
+                # redireccionamos pasándole la cédula por GET para mostrar el cambio reflejado inmediatamente
                 return redirect(url_for('admin.modificar_cargo', cedula=cedula_empleado, exito='El cargo del empleado ha sido actualizado correctamente.'))
 
             except Exception as e:
@@ -828,17 +827,17 @@ def modificar_cargo():
                 if cur: cur.close()
                 if conn: conn.close()
 
-    # PASO 1: Buscar empleado y cargar cargos disponibles (GET)
+    # buscar empleado y cargar cargos disponibles (GET)
     if cedula_buscar:
         try:
             conn = get_conexion()
             cur = conn.cursor(cursor_factory=RealDictCursor)
 
-            # 1. Traer todos los cargos disponibles para el select ordenados alfabéticamente
+            # traer todos los cargos disponibles para el select ordenados alfabéticamente
             cur.execute("SELECT cod_cargo_pk, Nombre FROM CARGO ORDER BY Nombre ASC")
             cargos_disponibles = cur.fetchall()
 
-            # 2. Consultar los datos actuales del empleado
+            # consultar los datos actuales del empleado
             cur.execute("""
                 SELECT 
                     e.Cedula_pk,
@@ -897,21 +896,15 @@ def modificar_cargo():
         exito=mensaje_exito
     )
 
-#GESTION - CRUD EMPLEADOS
-@admin_bp.route('/admin/gestion-empleados')
-def gestion_empleados():
-    if session.get('perfil') != 'admin':
-        return redirect(url_for('auth.login'))
-    return render_template('admin/gestion_empleados.html')
+#GESTION - CRUD ASOCIADOS
 
-#GESTION - CRUD     ASOCIADOS
 @admin_bp.route('/admin/gestion-asociados')
 def gestion_asociados():
     if session.get('perfil') != 'admin':
         return redirect(url_for('auth.login'))
     return render_template('admin/gestion_asociados.html')
 
-# REPORTES Y BITACORA
+# REPORTES 
 
 @admin_bp.route('/admin/reportes')
 def reportes():
@@ -919,11 +912,47 @@ def reportes():
         return redirect(url_for('auth.login'))
     return render_template('admin/reportes.html')
 
-@admin_bp.route('/admin/bitacora')
-def bitacora():
+@admin_bp.route('/admin/reportes/asociados-estado-agencia')
+def asociados_estado_agencia():
     if session.get('perfil') != 'admin':
         return redirect(url_for('auth.login'))
-    return render_template('admin/bitacora.html')
+    return render_template('admin/reportes/asociados_estado_agencia.html')
+
+@admin_bp.route('/admin/reportes/extracto-cuenta-ahorro')
+def extracto_cuenta_ahorro():
+    if session.get('perfil') != 'admin':
+        return redirect(url_for('auth.login'))
+    return render_template('admin/reportes/extracto_cuenta_ahorro.html')
+
+@admin_bp.route('/admin/reportes/estado-cartera')
+def estado_cartera():
+    if session.get('perfil') != 'admin':
+        return redirect(url_for('auth.login'))
+    return render_template('admin/reportes/estado_cartera.html')
+
+@admin_bp.route('/admin/reportes/asociados-en-mora')
+def asociados_en_mora():
+    if session.get('perfil') != 'admin':
+        return redirect(url_for('auth.login'))
+    return render_template('admin/reportes/asociados_en_mora.html')
+
+@admin_bp.route('/admin/reportes/historial-pagos-credito')
+def historial_pagos_credito():
+    if session.get('perfil') != 'admin':
+        return redirect(url_for('auth.login'))
+    return render_template('admin/reportes/historial_pagos_credito.html')
+
+@admin_bp.route('/admin/reportes/productividad-asesores')
+def productividad_asesores():
+    if session.get('perfil') != 'admin':
+        return redirect(url_for('auth.login'))
+    return render_template('admin/reportes/productividad_asesores.html')
+
+@admin_bp.route('/admin/reportes/codeudoria-activa')
+def codeudoria_activa():
+    if session.get('perfil') != 'admin':
+        return redirect(url_for('auth.login'))
+    return render_template('admin/reportes/acodeudoria_activa.html')
 
 # SUPERVISION
 
