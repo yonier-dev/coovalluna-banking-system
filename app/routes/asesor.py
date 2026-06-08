@@ -1662,12 +1662,110 @@ def creditos_activos():
             conn.close()
 
 
-# NO IMPLEMENTADA
+# Implementada
+from datetime import date
+
 @asesor_bp.route('/asesor/mora')
 def asociados_mora():
-    # GET → lista los asociados con cuotas vencidas o en mora.
-    # Debe mostrar: nombre del asociado, número de crédito, número de cuota vencida, días de mora y asesor responsable.
-    # Calcular días de mora desde la fecha de vencimiento hasta la actual.
-    # Mostrar solo asociados en mora de la agencia del asesor.
-    return render_template('asesor/mora.html')
+
+    if session.get('perfil') != 'asesor':
+        return redirect(url_for('auth.login'))
+
+    conn = None
+    cur = None
+
+    try:
+        conn = get_conexion()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        # Obtiene agencia del asesor logueado
+        cur.execute("""
+            SELECT CodigoAgencia_fk
+            FROM EMPLEADO
+            WHERE Cedula_pk = %s
+        """, (session['cedula'],))
+
+        asesor_agencia = cur.fetchone()
+
+        if not asesor_agencia:
+            return render_template('asesor/mora.html', mora=[])
+
+        codigo_agencia = asesor_agencia['codigoagencia_fk']
+
+        # Obtiene nombre del asesor
+        cur.execute("""
+            SELECT nombres, apellidos
+            FROM EMPLEADO
+            WHERE Cedula_pk = %s
+        """, (session['cedula'],))
+
+        emp = cur.fetchone()
+
+        nombre_asesor = "Desconocido"
+
+        if emp:
+            nombre_asesor = f"{emp['nombres']} {emp['apellidos']}"
+
+        # trae los que estan en mora unicamente de la agencia del asesor logueado
+        cur.execute("""
+            SELECT 
+                a.nombres,
+                a.apellidos,
+                c.Num_radicado_pk,
+                cu.Num_cuota,
+                cu.Fech_pago,
+                cu.Estado_pago
+            FROM CUOTAS cu
+            INNER JOIN CREDITO c 
+                ON cu.Num_radicado_fk = c.Num_radicado_pk
+            INNER JOIN SOLICITA s
+                ON c.Num_radicado_pk = s.Num_radicadoCredito_fk
+            INNER JOIN ASOCIADO a
+                ON s.CedulaAsociado_fk = a.cedula_pk
+            WHERE cu.Estado_pago = 'Mora'
+            AND c.codigo_agencia_fk = %s
+            ORDER BY c.Num_radicado_pk, cu.Num_cuota
+        """, (codigo_agencia,))
+
+        resultados = cur.fetchall()
+
+        morosos = []
+
+        hoy = date.today()
+
+        for r in resultados:
+
+            if r['fech_pago']:
+                dias_mora = (hoy - r['fech_pago']).days
+            else:
+                dias_mora = 0
+
+            morosos.append({
+                'nombre_asociado': f"{r['nombres']} {r['apellidos']}",
+                'num_radicado': r['num_radicado_pk'],
+                'num_cuota': r['num_cuota'],
+                'dias_mora': dias_mora,
+                'asesor': nombre_asesor
+            })
+
+        return render_template(
+            'asesor/mora.html',
+            mora=morosos
+        )
+
+    except Exception as e:
+        print("\n========== ERROR MORA ==========")
+        print(e)
+        print("================================\n")
+
+        return render_template(
+            'asesor/mora.html',
+            mora=[]
+        )
+
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
 
