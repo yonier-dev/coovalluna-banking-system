@@ -145,15 +145,15 @@
                 <tr>
                     <td>{{ m.num_transaccion }}</td>
                     <td>{{ m.fecha }}</td>
-                    <td>{{ m.hora }}</td>
+                    <td>{{ m.hora }}</td> 
                     <td>{{ m.tipo_movimiento }}</td>
                     <td>${{ m.valor }}</td>
                     <td>{{ m.canal }}</td>
                 </tr>
                 {% endfor %}
             {% else %}
-                <tr><td colspan="6" class="no-data">No hay movimientos para mostrar.</td></tr>
-            {% endif %}
+                <tr><td colspan="5" class="no-data">No hay movimientos para mostrar.</td></tr>
+            {% endif %}   
         </tbody>
     </table>
 

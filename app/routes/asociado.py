@@ -1,5 +1,6 @@
-from flask import Blueprint, render_template, session, redirect, url_for
+from flask import Blueprint, render_template, request, session, redirect, url_for
 from db import get_conexion
+from dateutil.relativedelta import relativedelta
 
 asociado_bp = Blueprint('asociado', __name__)
 
@@ -66,18 +67,102 @@ def datos_personales():
                          fundador=fundador,
                          beneficiarios=beneficiarios)
 
-# NO IMPLEMENTADA
+#  IMPLEMENTADA
 @asociado_bp.route('/asociado/cuentas')
 def cuentas():
     if session.get('perfil') != 'asociado':
         return redirect(url_for('auth.login'))
-    # listar las cuentas de ahorro del asociado
-    # el saldo se calcula sumando depositos y restando retiros y transferencias salientes
-    # mostrar extracto con fecha, valor, tipo y canal de cada movimiento
-    # permitir filtrar por rango de fechas y por canal (presencial, app movil, cajero automatico)
-    # solo puede ver sus propias cuentas
-    # tener en cuenta variables del .html
-    return render_template('asociado/cuentas.html')
+    cedula= session['cedula']
+    
+    #Aqui se leen los valores de los filtros puestos en la pagina
+    fecha_inicio = request.args.get('fecha_inicio')
+    fecha_fin = request.args.get('fecha_fin')
+    canal = request.args.get('canal')
+    
+    conn = get_conexion()
+    cur = conn.cursor()
+
+    cur.execute("""
+    SELECT
+        Numero_pk,
+        Estado,
+        CodigoAgencia_fk
+    FROM CUENTA_AHORRO
+    WHERE cedula_asociado_fk = %s
+""", (cedula,))
+
+    cuentas = [
+    {
+        'numero_pk': c[0],
+        'estado': c[1],
+        'agencia': c[2]
+    }
+    for c in cur.fetchall()
+    ]
+
+    #Consulta SQL que muestra los movimientos de cuentas hechos por el asociado registrado
+    sql = """
+    SELECT M.NUM_TRANSACCION_PK,M.FECHA_HORA
+    ,M.TIPO_MOVIMIENTO,M.VALOR,M.CANAL
+    FROM REALIZA R 
+    INNER JOIN movimiento M ON R.num_transaccionmov_fk = M.num_transaccion_pk
+    WHERE R.cedulaasociado_fk = %s 
+    """
+
+    parametros = [cedula] #Variable que va capturar valores de los filtros
+    #Logica que tiene que ver con el filtro
+    if fecha_inicio:
+        sql += " AND DATE(M.FECHA_HORA) >= %s" # %s captura valor seleccionado en pantalla
+        parametros.append(fecha_inicio)   #Y agrega fragmentos de esas consultas dentro de la condicion where
+
+    if fecha_fin:
+        sql += " AND DATE(M.FECHA_HORA) <= %s"
+        parametros.append(fecha_fin)
+
+    if canal:
+        sql += " AND M.CANAL = %s"
+        parametros.append(canal)
+
+    sql += " ORDER BY M.FECHA_HORA DESC"
+
+    cur.execute(sql, tuple(parametros))
+
+    filas = cur.fetchall()
+
+    movimientos = [ #Diccionario para guardar los valores a mostrar en la interfaz
+        {
+            'num_transaccion': m[0],
+            'fecha': m[1].date(),
+            'hora': m[1].strftime('%H:%M:%S'),#El comando .strftime('%H:%M:%S') es para separar la hora de la fecha en este caso
+            'tipo_movimiento': m[2],
+            'valor': m[3],
+            'canal': m[4]
+        }
+        for m in filas
+    ]
+    saldo=0#Declaro variable saldo
+    for m in filas:     #str(m[2]).lower()  es una excepsion por si salen valores nulls
+        tipoMovimiento= str(m[2]).lower()#tipo_movimiento  [3]valor
+        if tipoMovimiento=='deposito':
+            saldo=saldo+m[3]#Incrementa saldo
+        elif tipoMovimiento=='retiro':
+            saldo -= m[3]#Se le resta al saldo
+        elif tipoMovimiento == 'transferencia entrante':
+            saldo += m[3]#Incrementa saldo
+        elif tipoMovimiento == 'transferencia saliente':
+            saldo -= m[3]#Se le resta al saldo
+    
+    if saldo < 0:#Pequeña excepcion. Si saldo da numeros negativos es igual a 0
+        saldo=0
+    cur.close()
+    conn.close()
+
+    print("MOVIMIENTOS:", movimientos)
+
+    return render_template('asociado/cuentas.html',
+        movimientos=movimientos,
+        cuentas=cuentas,
+        saldo=saldo)
 
 #  IMPLEMENTADA
 @asociado_bp.route('/asociado/creditos')
@@ -122,12 +207,12 @@ def creditos():
     ORDER BY Num_cuota
         """, (num_radicado,))
 
-    filas_cuotas = cur.fetchall()
+        filas_cuotas = cur.fetchall()
 
-    cuotas = [
+        cuotas = [
             {
-                'num_cuota': q[0],
-                'fecha_vencimiento': c[6],  # temporalmente uso la primera fecha de vencimiento mientras resuelvo un detalle con esto
+                'num_cuota': q[0],    #Se toma la fecha del primer vencimiento y se le suma la cuota . ejemplo si dice 4 cuotas seria en realidad 3 porque la primer cuota debe sumar 0 meses
+                'fecha_vencimiento':  c[6] + relativedelta(months=q[0]-1),  # temporalmente uso la primera fecha de vencimiento mientras resuelvo un detalle con esto
                 'fech_pago': q[1],
                 'valor_pagado': q[2],
                 'estado_pago': q[3]
@@ -135,12 +220,13 @@ def creditos():
             for q in filas_cuotas
         ]
 
-    cuotas_pagadas = len([
+        cuotas_pagadas = len([
             q for q in cuotas
             if q['estado_pago'] and q['estado_pago'].lower() != 'pendiente'
         ])
+    
 
-    creditos.append({
+        creditos.append({
             'num_radicado': c[0],
             'valor_aprobado': c[1],
             'linea_credito': c[2],
@@ -151,13 +237,8 @@ def creditos():
             'cuotas': cuotas
         })
 
-    print("CEDULA:", cedula)#Outputs para saber que en efecto funciona correctamente
     cur.close()
-    print("RADICADO:", num_radicado)
     conn.close()
-    
-    print("CREDITOS:", creditos)
-   
     return render_template('asociado/creditos.html',creditos=creditos)
 
 # NO IMPLEMENTADA
