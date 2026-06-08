@@ -1,6 +1,14 @@
-from flask import Blueprint, render_template, request, session, redirect, url_for
-from db import get_conexion
-from dateutil.relativedelta import relativedelta
+from flask import Blueprint, Response, render_template, request, session, redirect, url_for #Conexion con la pagina en HTML
+from db import get_conexion#Conexion con la base de datos remota
+from dateutil.relativedelta import relativedelta#Para calcular la fecha fin
+import csv #Para generar el archivo cvs
+from io import StringIO#Para poder que se pueda escribir correctamente las cadenas en el archivo
+#Importando Librerias que me permiten generar el archivo PDF
+from io import BytesIO
+from flask import send_file
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
 
 asociado_bp = Blueprint('asociado', __name__)
 
@@ -81,7 +89,7 @@ def cuentas():
     
     conn = get_conexion()
     cur = conn.cursor()
-
+     #Consulta  que me muestra el numero de la cuenta de ahorros, su estado y la agencia a la que pertence.Todo esto perteneciente al asociado loguiado
     cur.execute("""
     SELECT
         Numero_pk,
@@ -124,7 +132,7 @@ def cuentas():
         parametros.append(canal)  #Se pone el append para garantizar que se arme la tupla(cedula,canal) en este caso 
                                   #se hace con el objetivo de que funcione adecuadamente la consulta porque se requieren dos valores para funcionar
 
-    sql += " ORDER BY M.FECHA_HORA DESC"
+    sql += " ORDER BY M.FECHA_HORA DESC" #Ordena las fechas-hora de forma descendente
 
     cur.execute(sql, tuple(parametros))
 
@@ -242,44 +250,290 @@ def creditos():
     conn.close()
     return render_template('asociado/creditos.html',creditos=creditos)
 
-# NO IMPLEMENTADA
+#  IMPLEMENTADA
 @asociado_bp.route('/asociado/descargas')
 def descargas():
     if session.get('perfil') != 'asociado':
         return redirect(url_for('auth.login'))
     # obtener cedula del asociado desde la sesion
-    # cedula = session['cedula']
-
-    # permitir elegir entre formato PDF o CSV antes de descargar
-    # el extracto debe contener los movimientos del filtro aplicado
-    # mas el saldo calculado al final del periodo
-    # el estado de cuenta del credito debe contener cuotas, fechas de vencimiento,
-    # fechas de pago y montos abonados
+    cedula = session['cedula']
     
-    # mandar cuentas y creditos al html para llenar los selectores
-    # return render_template('asociado/descargas.html', cuentas=cuentas, creditos=creditos)
-    return render_template('asociado/descargas.html')
+    conn = get_conexion()
+    cur = conn.cursor()
+    #Consulta queme muestra el numero de la cuenta de ahorro y del estado de esa cuenta perteneciente al asociado loguiado
+    cur.execute("""
+    SELECT numero_pk,estado FROM cuenta_ahorro
+     where cedula_asociado_fk=%s
+
+                """,(cedula,))
+    
+    cuentas=[{
+        'numero_pk': c[0],
+        'estado': c[1]
+    }
+    for c in cur.fetchall()
+    ]
+    #Consulta que me relaciona credito con solicita. Ademas muestra el numero de radicado y estado de la cuenta especificamente del asociado loguiado
+    cur.execute("""
+        SELECT C.num_radicado_pk,C.estado FROM credito C
+        INNER JOIN solicita S ON S.num_radicadocredito_fk = C.num_radicado_pk
+        WHERE S.cedulaasociado_fk = %s
+                """,(cedula,))
+    creditos = [{
+        'num_radicado': d[0],
+        'estado': d[1]
+    }
+    for d in cur.fetchall()
+    ]
+    
+    cur.close()
+    conn.close()
+    return render_template('asociado/descargas.html',cuentas=cuentas,
+                           creditos=creditos)
 
 @asociado_bp.route('/asociado/descargas/cuenta')
 def descargar_cuenta():
-    # recibir cuenta, fecha_inicio, fecha_fin y formato (pdf o csv) por GET
-    # consultar movimientos filtrados de esa cuenta
-    # calcular saldo dinamico
-    # si formato == 'pdf': generar PDF con reportlab o weasyprint
-    # si formato == 'csv': generar CSV con el modulo csv de python
-    # retornar el archivo como descarga con send_file
-    pass
+    
+    cedula = session['cedula']
+
+    cuenta = request.args.get('cuenta')
+    fecha_inicio = request.args.get('fecha_inicio')
+    fecha_fin = request.args.get('fecha_fin')
+    formato = request.args.get('formato')
+    
+    conn = get_conexion()
+    cur = conn.cursor()
+    
+    if fecha_inicio and fecha_fin:
+        #Consulta que me haya los movimientos de la cuenta dependiendo de los filtor aplicados
+        cur.execute("""
+    SELECT
+        M.num_transaccion_pk,
+        M.fecha_hora,
+        M.tipo_movimiento,
+        M.valor,
+        M.canal
+    FROM MOVIMIENTO M
+    INNER JOIN REALIZA R
+        ON R.num_transaccionmov_fk = M.num_transaccion_pk
+    WHERE R.cedulaasociado_fk = %s
+      AND M.cuenta_a_la_que_pertenece = %s
+      AND DATE(M.fecha_hora) BETWEEN %s AND %s
+    ORDER BY M.fecha_hora
+    """, (cedula, cuenta, fecha_inicio, fecha_fin))#Variables que van en los %s
+    else:
+        #Misma consulta pero en este caso funciona sin esperar los valores de las fechas
+        cur.execute("""
+    SELECT
+        M.num_transaccion_pk,
+        M.fecha_hora,
+        M.tipo_movimiento,
+        M.valor,
+        M.canal
+    FROM MOVIMIENTO M
+    INNER JOIN REALIZA R
+        ON R.num_transaccionmov_fk = M.num_transaccion_pk
+    WHERE R.cedulaasociado_fk = %s
+      AND M.cuenta_a_la_que_pertenece = %s
+    ORDER BY M.fecha_hora
+    """, (cedula, cuenta)) #Variables que van en los %s
+    
+    filas = cur.fetchall()
+    saldo=0#Declaro variable saldo  
+    for m in filas:  #Calculo del saldo
+                       #str(m[2]).lower()  es una excepsion por si salen valores nulls
+        tipoMovimiento= str(m[2]).lower()#tipo_movimiento  [3]valor
+        if tipoMovimiento=='deposito':
+            saldo=saldo+m[3]#Incrementa saldo
+        elif tipoMovimiento=='retiro':
+            saldo -= m[3]#Se le resta al saldo
+        elif tipoMovimiento == 'transferencia entrante':
+            saldo += m[3]#Incrementa saldo
+        elif tipoMovimiento == 'transferencia saliente':
+            saldo -= m[3]#Se le resta al saldo
+    
+    if saldo < 0:#Pequeña excepcion. Si saldo da numeros negativos es igual a 0
+        saldo=0
+
+    if formato == 'csv':    
+        archivo = StringIO()
+        writer = csv.writer(archivo)
+
+        writer.writerow([  #Nombre de cada columna del archivo
+        "Transaccion",
+        "Fecha",
+        "Tipo",
+        "Valor",
+        "Canal"
+        ])
+
+        for f in filas:   #Informacion que va en cada columna
+            writer.writerow([
+            f[0],
+            f[1],
+            f[2],
+            f[3],
+            f[4]
+            ])
+
+        writer.writerow([])
+        writer.writerow(["Saldo final", saldo])
+    
+        cur.close()
+        conn.close()
+    
+        salida = archivo.getvalue()
+        archivo.close()
+
+        return Response(
+        salida,
+        mimetype="text/csv",
+        headers={
+            "Content-Disposition":
+            f"attachment; filename=extracto_{cuenta}.csv"
+            }
+        )
+    elif formato=='pdf':
+        buffer = BytesIO()
+        pdf = SimpleDocTemplate(buffer)
+        estilos = getSampleStyleSheet()
+        elementos = []
+        elementos.append(
+        Paragraph(f"Estado de Cuenta Crédito {cuenta}", estilos['Title'])
+        )
+        elementos.append(Spacer(1, 12))
+        elementos.append(
+            Paragraph(
+            f"<b>Saldo Final:</b> ${saldo:,.2f}",
+            estilos['Heading2']
+        )
+        )
+        datos = [
+         ["Transacción", "Fecha", "Tipo", "Valor", "Canal"]
+        ]
+        for f in filas:
+            datos.append([
+            str(f[0]),
+            str(f[1]),
+            str(f[2]),
+            str(f[3]),
+            str(f[4])
+            ])
+        tabla = Table(datos)
+        tabla.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.lightblue),
+        ('GRID', (0,0), (-1,-1), 1, colors.black),
+        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold')
+        ]))
+        elementos.append(tabla)
+        pdf.build(elementos)
+        buffer.seek(0)
+
+        cur.close()
+        conn.close()
+
+        return send_file(
+        buffer,
+        as_attachment=True,
+        download_name=f"credito_{cuenta}.pdf",
+        mimetype="application/pdf"
+        )
 
 
 @asociado_bp.route('/asociado/descargas/credito')
 def descargar_credito():
-    # recibir credito y formato (pdf o csv) por GET
-    # consultar cuotas del credito con fechas de vencimiento, pago y montos
-    # si formato == 'pdf': generar PDF
-    # si formato == 'csv': generar CSV
-    # retornar el archivo como descarga con send_file
-    pass
+    
+    conn = get_conexion()
+    cur = conn.cursor()
+    
+    credito = request.args.get('credito')
+    formato = request.args.get('formato')
+    #Consulta que me permite ver el la fecha,valor y estado de pago del credito.El captura el credito del asociado que este registrado
+    cur.execute("""
+    SELECT
+    Num_cuota,
+    Fech_pago,
+    Valor_pagado,
+    Estado_pago
+    FROM CUOTAS
+    WHERE Num_radicado_fk = %s
+    ORDER BY Num_cuota
+    """, (credito,))
+    filas = cur.fetchall()
 
+    if formato == 'csv':
+        archivo = StringIO()
+        writer = csv.writer(archivo)
+        writer.writerow([
+        'Numero Cuota',
+        'Fecha Pago',
+        'Valor Pagado',
+        'Estado Pago'
+        ])
+    
+        for f in filas:
+            writer.writerow([
+            f[0],
+            f[1],
+            f[2],
+            f[3]
+            ])
+
+        writer.writerow(["Credito", credito])
+        writer.writerow([])
+    
+        cur.close()
+        conn.close()
+
+        salida = archivo.getvalue()
+        archivo.close()
+        return Response(
+        salida,
+        mimetype="text/csv",
+        headers={
+            "Content-Disposition":
+            f"attachment; filename=extracto_{credito}.csv"
+            }
+        )
+    
+    elif formato=='pdf':
+        buffer = BytesIO()
+        pdf = SimpleDocTemplate(buffer)
+        estilos = getSampleStyleSheet()
+        elementos = []
+        elementos.append(
+        Paragraph(f"Estado de Cuenta Crédito {credito}", estilos['Title'])
+        )
+        elementos.append(Spacer(1, 12))
+        datos = [
+        ["Cuota", "Fecha Pago", "Valor Pagado", "Estado"]
+        ]
+        for f in filas:
+            datos.append([
+            str(f[0]),
+            str(f[1]),
+            str(f[2]),
+            str(f[3])
+            ])
+        tabla = Table(datos)
+        tabla.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.lightblue),
+        ('GRID', (0,0), (-1,-1), 1, colors.black),
+        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold')
+        ]))
+        elementos.append(tabla)
+        pdf.build(elementos)
+        buffer.seek(0)
+
+        cur.close()
+        conn.close()
+
+        return send_file(
+        buffer,
+        as_attachment=True,
+        download_name=f"credito_{credito}.pdf",
+        mimetype="application/pdf"
+        )
 #  IMPLEMENTADA
 
 @asociado_bp.route('/asociado/actualizar-datos', methods=['GET', 'POST'])
@@ -306,7 +560,7 @@ def actualizar_datos():
         'direccion': a[3]
         }
     
-
+    
     if request.method == 'POST':
         telefono = request.form['telefono']
         correo = request.form['correo']
