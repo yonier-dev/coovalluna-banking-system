@@ -114,6 +114,10 @@
     <h2>Formulario de Pago</h2>
     <form id="pagoForm" class="form-grid" method="POST">
       <div>
+        <label for="fecha">Fecha de Pago</label>
+        <input id="fecha" name="fecha" type="date" required>
+      </div>      
+      <div>
         <label for="cedula">Cédula del Asociado</label>
         <input id="cedula" name="cedula" type="text" placeholder="Ingrese la cédula" required>
       </div>
@@ -145,7 +149,7 @@
     </form>
 </div>
 
-<script>
+<!--<script>
     const form = document.getElementById('pagoForm');
     const errorMsg = document.getElementById('errorMsg');
     const successMsg = document.getElementById('successMsg');
@@ -168,5 +172,5 @@
         errorMsg.style.display = "block";
       }
     });
-</script>
+</script>-->
 {% endblock %}

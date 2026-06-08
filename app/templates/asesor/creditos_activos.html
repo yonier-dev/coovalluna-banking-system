@@ -91,7 +91,7 @@
                 {% for cuota in credito.cuotas %}
                 <tr>
                     <td>{{ cuota.num_cuota }}</td>
-                    <td>{{ cuota.fecha_vencimiento }}</td>
+                    <th>Fecha Pago</th>
                     <td>{{ cuota.fech_pago if cuota.fech_pago else '—' }}</td>
                     <td>${{ cuota.valor_pagado }}</td>
                     <td class="

@@ -1224,59 +1224,548 @@ def transferencia():
         if conn:
             conn.close()
 
-# NO IMPLEMENTADA
+# IMPLEMENTADA
 @asesor_bp.route('/asesor/solicitud-credito', methods=['GET', 'POST'])
 def solicitud_credito():
-    # GET → muestra formulario para radicar crédito.
-    # POST → inserta nuevo crédito con valor solicitado, plazo, tasa y línea de crédito.
-    # El sistema genera automáticamente el número de radicado.
-    # Si hay codeudor, registrar su cédula y fecha de firma del pagaré.
-    return render_template('asesor/solicitud_credito.html')
+
+    if session.get('perfil') != 'asesor':
+        return redirect(url_for('auth.login'))
+
+    if request.method == 'GET':
+        return render_template('asesor/solicitud_credito.html')
+    
+    print("Entró a solicitud_credito()")
+
+    conn = None
+    cur = None
+
+    try:
+
+        cedula = request.form['cedula']
+        valor = float(request.form['valor'])
+        plazo = int(request.form['plazo'])
+        tasa = float(request.form['tasa'])
+        linea = request.form['linea']
+
+        codeudor = request.form.get('codeudor', '').strip()
+        fecha_firma = request.form.get('fechaCodeudor', '').strip()
+
+        conn = get_conexion()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        #obtiene agencia del asesor
+        cur.execute("""
+            SELECT CodigoAgencia_fk
+            FROM EMPLEADO
+            WHERE Cedula_pk = %s
+        """, (session['cedula'],))
+
+        asesor = cur.fetchone()
+
+        if not asesor:
+            return render_template(
+                'asesor/solicitud_credito.html',
+                error='No se encontró la agencia del asesor'
+            )
+
+        codigo_agencia = asesor['codigoagencia_fk']
+
+        # verifica que el asociado este activo y que exista
+        cur.execute("""
+            SELECT *
+            FROM ASOCIADO
+            WHERE cedula_pk = %s
+            AND LOWER(estado) = 'activo'
+        """, (cedula,))
+
+        asociado = cur.fetchone()
+
+        if not asociado:
+            return render_template(
+                'asesor/solicitud_credito.html',
+                error='El asociado no existe o no se encuentra activo'
+            )
+
+        # valida el valor solicitado
+        if valor <= 0:
+            return render_template(
+                'asesor/solicitud_credito.html',
+                error='El valor solicitado debe ser mayor a cero'
+            )
+
+        # valida el plazo en meses
+        if plazo <= 0:
+            return render_template(
+                'asesor/solicitud_credito.html',
+                error='El plazo debe ser mayor a cero'
+            )
+
+        # valida la tasa de intereses
+        if tasa <= 0:
+            return render_template(
+                'asesor/solicitud_credito.html',
+                error='La tasa debe ser mayor a cero'
+            )
+
+        # valida el codeudor si es que fue ingresado
+        if codeudor:
+
+            cur.execute("""
+                SELECT *
+                FROM ASOCIADO
+                WHERE cedula_pk = %s
+                AND LOWER(estado) = 'activo'
+            """, (codeudor,))
+
+            existe_codeudor = cur.fetchone()
+
+            if not existe_codeudor:
+                return render_template(
+                    'asesor/solicitud_credito.html',
+                    error='El codeudor no existe o no está activo'
+                )
+
+            if codeudor == cedula:
+                return render_template(
+                    'asesor/solicitud_credito.html',
+                    error='El asociado no puede ser su propio codeudor'
+                )
+
+            if not fecha_firma:
+                return render_template(
+                    'asesor/solicitud_credito.html',
+                    error='Debe registrar la fecha de firma del pagaré'
+                )
+
+        import uuid
+
+        radicado = "CR-" + str(uuid.uuid4())[:12]
+
+        # crea un credito
+        cur.execute("""
+            INSERT INTO CREDITO(
+                Num_radicado_pk,
+                Estado,
+                valor_solicitado,
+                plazo_meses,
+                Tasa_interes_m,
+                Linea_credito,
+                codigo_agencia_fk
+            )
+            VALUES (%s,%s,%s,%s,%s,%s,%s)
+        """, (
+            radicado,
+            'PENDIENTE',
+            valor,
+            plazo,
+            tasa,
+            linea,
+            codigo_agencia
+        ))
+
+        # relacion de asociado y credito
+        cur.execute("""
+            INSERT INTO SOLICITA(
+                CedulaAsociado_fk,
+                Num_radicadoCredito_fk
+            )
+            VALUES (%s,%s)
+        """, (
+            cedula,
+            radicado
+        ))
+
+        # registra codeudor si fue ingresado
+        if codeudor:
+
+            cur.execute("""
+                INSERT INTO ES_CODEUDOR(
+                    CedulaAsociado_fk,
+                    Num_radicadoCredito_fk,
+                    Fecha_Firma
+                )
+                VALUES (%s,%s,%s)
+            """, (
+                codeudor,
+                radicado,
+                fecha_firma
+            ))
+
+        conn.commit()
+
+        print("===================================")
+        print("SOLICITUD REGISTRADA CORRECTAMENTE")
+        print("Radicado:", radicado)
+        print("Asociado:", cedula)
+        print("Valor:", valor)
+        print("===================================")
+
+        return render_template(
+            'asesor/solicitud_credito.html',
+            mensaje=f'Solicitud registrada correctamente. Radicado: {radicado}'
+        )
+
+    except Exception as e:
+
+        print("\n========== ERROR SOLICITUD CRÉDITO ==========")
+        print(type(e))
+        print(e)
+        print("=============================================\n")
+
+        return render_template(
+            'asesor/solicitud_credito.html',
+            error=f'Error: {str(e)}'
+        )
+
+    finally:
+
+        if cur:
+            cur.close()
+
+        if conn:
+            conn.close()
 
 
 # NO IMPLEMENTADA
 @asesor_bp.route('/asesor/pago-cuota', methods=['GET', 'POST'])
 def pago_cuota():
-    # GET → muestra formulario con créditos activos.
-    # POST → registra número de cuota, fecha de pago y valor pagado.
-    # Si la fecha de pago es posterior al vencimiento, marcar como “pagado con mora”.
-    # Actualizar el estado general del crédito si todas las cuotas están pagadas.
-    return render_template('asesor/pago_cuota.html')
 
-
-# NO IMPLEMENTADA
-@asesor_bp.route('/asesor/creditos-activos')
-def creditos_activos():
     if session.get('perfil') != 'asesor':
         return redirect(url_for('auth.login'))
 
-    # datos de prueba temporales para ver el html
-    creditos = [
-        {
-            'num_radicado': 'CRED-001',
-            'nombre_asociado': 'Emilce Rentería',
-            'valor_aprobado': '5,000,000',
-            'estado': 'al día',
-            'linea_credito': 'libre inversión',
-            'plazo_meses': 24,
-            'cuotas_pagadas': 6,
-            'cuotas': [
-                {'num_cuota': 1, 'fecha_vencimiento': '2023-02-15', 'fech_pago': '2023-02-15', 'valor_pagado': '245,000', 'estado_pago': 'a tiempo'},
-                {'num_cuota': 2, 'fecha_vencimiento': '2023-03-15', 'fech_pago': '2023-03-15', 'valor_pagado': '245,000', 'estado_pago': 'a tiempo'},
-                {'num_cuota': 3, 'fecha_vencimiento': '2023-04-15', 'fech_pago': None, 'valor_pagado': '0', 'estado_pago': 'pendiente'},
-            ]
-        }
-    ]
+    if request.method == 'GET':
+        return render_template('asesor/pago_cuota.html')
 
-    return render_template('asesor/creditos_activos.html', creditos=creditos)
+    conn = None
+    cur = None
+
+    try:
+        cedula = request.form['cedula']
+        credito = request.form['credito']
+        cuota = int(request.form['cuota'])
+        valor = float(request.form['valor'])
+        fecha_pago = request.form['fecha']
+        estado = request.form['estado']
+
+        conn = get_conexion()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        # 1. Buscar la cuota existente
+        cur.execute("""
+            SELECT *
+            FROM CUOTAS
+            WHERE Num_radicado_fk = %s
+            AND Num_cuota = %s
+        """, (credito, cuota))
+
+        cuota_db = cur.fetchone()
+
+        if not cuota_db:
+            return render_template(
+                'asesor/pago_cuota.html',
+                error="La cuota no existe para este crédito"
+            )
+
+        # 2. Actualizar cuota
+        cur.execute("""
+            UPDATE CUOTAS
+            SET Valor_pagado = %s,
+                Fech_pago = %s,
+                Estado_pago = %s
+            WHERE Num_radicado_fk = %s
+            AND Num_cuota = %s
+        """, (
+            valor,
+            fecha_pago,
+            estado,
+            credito,
+            cuota
+        ))
+
+        # 3. Si no está pagada → marcar mora
+        if estado.lower() != "pagada":
+            cur.execute("""
+                UPDATE CUOTAS
+                SET Estado_pago = 'Mora'
+                WHERE Num_radicado_fk = %s
+                AND Num_cuota = %s
+            """, (credito, cuota))
+
+        # 4. Verificar si todas las cuotas están pagadas
+        cur.execute("""
+            SELECT COUNT(*) AS pendientes
+            FROM CUOTAS
+            WHERE Num_radicado_fk = %s
+            AND Estado_pago != 'Pagada'
+        """, (credito,))
+
+        pendientes = cur.fetchone()['pendientes']
+
+        if pendientes == 0:
+            cur.execute("""
+                UPDATE CREDITO
+                SET Estado = 'PAGADO'
+                WHERE Num_radicado_pk = %s
+            """, (credito,))
+
+        conn.commit()
+
+        print("\n==============================")
+        print("PAGO DE CUOTA REGISTRADO")
+        print("Crédito:", credito)
+        print("Cuota:", cuota)
+        print("Valor:", valor)
+        print("Estado:", estado)
+        print("==============================\n")
+
+        return render_template(
+            'asesor/pago_cuota.html',
+            mensaje="Pago registrado correctamente"
+        )
+
+    except Exception as e:
+        print("ERROR PAGO CUOTA:", e)
+
+        return render_template(
+            'asesor/pago_cuota.html',
+            error=str(e)
+        )
+
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
 
 
-# NO IMPLEMENTADA
+#IMPLEMENTADA
+@asesor_bp.route('/asesor/creditos-activos')
+def creditos_activos():
+
+    if session.get('perfil') != 'asesor':
+        return redirect(url_for('auth.login'))
+
+    conn = None
+    cur = None
+
+    try:
+        conn = get_conexion()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        # los creditos que estan activos con los datos del asociado
+        cur.execute("""
+            SELECT 
+                c.Num_radicado_pk,
+                c.valor_solicitado,
+                c.estado,
+                c.linea_credito,
+                c.plazo_meses,
+                a.nombres,
+                a.apellidos
+            FROM CREDITO c
+            INNER JOIN SOLICITA s 
+                ON c.Num_radicado_pk = s.Num_radicadoCredito_fk
+            INNER JOIN ASOCIADO a
+                ON s.CedulaAsociado_fk = a.cedula_pk
+            WHERE LOWER(c.estado) != 'pagado'
+            ORDER BY c.Num_radicado_pk DESC
+        """)
+
+        creditos_db = cur.fetchall()
+
+        creditos = []
+
+        # procesa cada credito
+        for c in creditos_db:
+
+            radicado = c['num_radicado_pk']
+
+            # trae las cuotas de cada credito 
+            cur.execute("""
+                SELECT 
+                    Num_cuota,
+                    Fech_pago,
+                    Valor_pagado,
+                    Estado_pago
+                FROM CUOTAS
+                WHERE Num_radicado_fk = %s
+                ORDER BY Num_cuota
+            """, (radicado,))
+
+            cuotas = cur.fetchall()
+
+            total_cuotas = len(cuotas)
+
+            #  cuotas pagas
+            cuotas_pagadas = sum(
+                1 for q in cuotas 
+                if q['estado_pago'] and q['estado_pago'].lower() == 'pagada'
+            )
+
+            # detectar si esta en mora
+            en_mora = any(
+                q['estado_pago'] and q['estado_pago'].lower() == 'mora'
+                for q in cuotas
+            )
+
+            # estado automatico del credito segun lo anterior
+            if cuotas_pagadas == total_cuotas and total_cuotas > 0:
+                estado_credito = "PAGADO"
+
+            elif en_mora:
+                estado_credito = "EN MORA"
+
+            else:
+                estado_credito = "ACTIVO"
+
+            # estructura final ya armandose completa con datos
+            creditos.append({
+                'num_radicado': radicado,
+                'nombre_asociado': f"{c['nombres']} {c['apellidos']}",
+                'valor_aprobado': c['valor_solicitado'],
+                'estado': estado_credito,
+                'estado_bd': c['estado'],
+                'linea_credito': c['linea_credito'],
+                'plazo_meses': c['plazo_meses'],
+                'cuotas_pagadas': cuotas_pagadas,
+                'total_cuotas': total_cuotas,
+                'cuotas': [
+                    {
+                        'num_cuota': q['num_cuota'],
+                        'fech_pago': q['fech_pago'],
+                        'valor_pagado': q['valor_pagado'],
+                        'estado_pago': q['estado_pago']
+                    }
+                    for q in cuotas
+                ]
+            })
+
+        return render_template(
+            'asesor/creditos_activos.html',
+            creditos=creditos
+        )
+
+    except Exception as e:
+        print("\n========== ERROR CREDITOS ACTIVOS ==========")
+        print(e)
+        print("===========================================\n")
+
+        return render_template(
+            'asesor/creditos_activos.html',
+            creditos=[]
+        )
+
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
+
+
+# Implementada
+from datetime import date
+
 @asesor_bp.route('/asesor/mora')
 def asociados_mora():
-    # GET → lista los asociados con cuotas vencidas o en mora.
-    # Debe mostrar: nombre del asociado, número de crédito, número de cuota vencida, días de mora y asesor responsable.
-    # Calcular días de mora desde la fecha de vencimiento hasta la actual.
-    # Mostrar solo asociados en mora de la agencia del asesor.
-    return render_template('asesor/mora.html')
+
+    if session.get('perfil') != 'asesor':
+        return redirect(url_for('auth.login'))
+
+    conn = None
+    cur = None
+
+    try:
+        conn = get_conexion()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        # Obtiene agencia del asesor logueado
+        cur.execute("""
+            SELECT CodigoAgencia_fk
+            FROM EMPLEADO
+            WHERE Cedula_pk = %s
+        """, (session['cedula'],))
+
+        asesor_agencia = cur.fetchone()
+
+        if not asesor_agencia:
+            return render_template('asesor/mora.html', mora=[])
+
+        codigo_agencia = asesor_agencia['codigoagencia_fk']
+
+        # Obtiene nombre del asesor
+        cur.execute("""
+            SELECT nombres, apellidos
+            FROM EMPLEADO
+            WHERE Cedula_pk = %s
+        """, (session['cedula'],))
+
+        emp = cur.fetchone()
+
+        nombre_asesor = "Desconocido"
+
+        if emp:
+            nombre_asesor = f"{emp['nombres']} {emp['apellidos']}"
+
+        # trae los que estan en mora unicamente de la agencia del asesor logueado
+        cur.execute("""
+            SELECT 
+                a.nombres,
+                a.apellidos,
+                c.Num_radicado_pk,
+                cu.Num_cuota,
+                cu.Fech_pago,
+                cu.Estado_pago
+            FROM CUOTAS cu
+            INNER JOIN CREDITO c 
+                ON cu.Num_radicado_fk = c.Num_radicado_pk
+            INNER JOIN SOLICITA s
+                ON c.Num_radicado_pk = s.Num_radicadoCredito_fk
+            INNER JOIN ASOCIADO a
+                ON s.CedulaAsociado_fk = a.cedula_pk
+            WHERE cu.Estado_pago = 'Mora'
+            AND c.codigo_agencia_fk = %s
+            ORDER BY c.Num_radicado_pk, cu.Num_cuota
+        """, (codigo_agencia,))
+
+        resultados = cur.fetchall()
+
+        morosos = []
+
+        hoy = date.today()
+
+        for r in resultados:
+
+            if r['fech_pago']:
+                dias_mora = (hoy - r['fech_pago']).days
+            else:
+                dias_mora = 0
+
+            morosos.append({
+                'nombre_asociado': f"{r['nombres']} {r['apellidos']}",
+                'num_radicado': r['num_radicado_pk'],
+                'num_cuota': r['num_cuota'],
+                'dias_mora': dias_mora,
+                'asesor': nombre_asesor
+            })
+
+        return render_template(
+            'asesor/mora.html',
+            mora=morosos
+        )
+
+    except Exception as e:
+        print("\n========== ERROR MORA ==========")
+        print(e)
+        print("================================\n")
+
+        return render_template(
+            'asesor/mora.html',
+            mora=[]
+        )
+
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
 
