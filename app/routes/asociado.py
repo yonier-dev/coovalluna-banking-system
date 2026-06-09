@@ -86,7 +86,8 @@ def cuentas():
     fecha_inicio = request.args.get('fecha_inicio')
     fecha_fin = request.args.get('fecha_fin')
     canal = request.args.get('canal')
-    
+    cuenta = request.args.get('cuenta')#Guarda cuenta seleccionada
+
     conn = get_conexion()
     cur = conn.cursor()
      #Consulta  que me muestra el numero de la cuenta de ahorros, su estado y la agencia a la que pertence.Todo esto perteneciente al asociado loguiado
@@ -119,6 +120,10 @@ def cuentas():
 
     parametros = [cedula] #Variable que va capturar valores de los filtros
     #Logica que tiene que ver con el filtro
+    if cuenta:
+        sql += " AND M.cuenta_a_la_que_pertenece = %s"
+        parametros.append(cuenta)
+    
     if fecha_inicio:
         sql += " AND DATE(M.FECHA_HORA) >= %s" # %s captura valor seleccionado en pantalla
         parametros.append(fecha_inicio)   #Y agrega fragmentos de esas consultas dentro de la condicion where
