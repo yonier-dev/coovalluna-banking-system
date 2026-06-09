@@ -82,19 +82,7 @@
     <a href="/logout" class="logout">Cerrar sesión</a>
 </div>
 
-<div class="consulta-box">
 
-    <!-- selector de cuenta -->
-    <div class="selector-cuenta">
-        <label style="margin:0;">Cuenta:</label>
-        <select id="cuenta" style="flex:1;">
-            {% for cuenta in cuentas %}
-            <option value="{{ cuenta.numero_pk }}">
-                {{ cuenta.numero_pk }} — {{ cuenta.estado }} — Agencia {{ cuenta.agencia }}
-            </option>
-            {% endfor %}
-        </select>
-    </div>
 
     <!-- saldo dinamico -->
     <div class="saldo">
@@ -103,6 +91,21 @@
 
     <!-- filtros -->
     <form method="GET" action="/asociado/cuentas">
+
+        <div class="consulta-box">
+    <!-- selector de cuenta -->
+     <div class="selector-cuenta">
+        <label>Cuenta:</label>
+        <select name="cuenta" style="flex:1;">
+            {% for cuenta in cuentas %}
+            <option value="{{ cuenta.numero_pk }}"
+                {% if request.args.get('cuenta') == cuenta.numero_pk|string %}selected{% endif %}>
+                {{ cuenta.numero_pk }} — {{ cuenta.estado }} — Agencia {{ cuenta.agencia }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+        
         <div class="filtros">
             <div>
                 <label>Fecha Inicio</label>

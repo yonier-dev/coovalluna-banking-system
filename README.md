@@ -56,7 +56,7 @@ coovalluna-banking-system/
 ### 1️⃣ Clonar el repositorio
  
 ```bash
-git clone https://github.com/tu-usuario/coovalluna-banking-system.git
+git clone git@github.com:yonier-dev/coovalluna-banking-system.git
 cd coovalluna-banking-system
 ```
  
