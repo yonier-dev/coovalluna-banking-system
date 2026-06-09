@@ -914,7 +914,62 @@ def modificar_cargo():
 def gestion_asociados():
     if session.get('perfil') != 'admin':
         return redirect(url_for('auth.login'))
-    return render_template('admin/gestion_asociados.html')
+    
+    # usamos el identificador seguro del administrador en la sesion
+    cedula_admin = session.get('user_id') or session.get('cedula')
+    
+    asociados = []
+    conn = None
+    cur = None
+
+    try:
+        conn = get_conexion()
+        cur = conn.cursor()
+
+        # 1. primero recuperamos el codigo de la agencia asignada al administrador
+        query_agencia = "SELECT CodigoAgencia_fk FROM EMPLEADO WHERE Cedula_pk = %s"
+        cur.execute(query_agencia, (cedula_admin,))
+        res_agencia = cur.fetchone()
+        
+        # 2. si el empleado existe, listamos los asociados de esa misma sucursal
+        if res_agencia:
+            codigo_agencia_admin = res_agencia[0]
+            
+            # tu consulta relacional certificada en el motor postgresql
+            query = """
+                SELECT DISTINCT
+                    a.cedula_pk, 
+                    a.Nombres,
+                    a.Apellidos,
+                    CASE 
+                        WHEN f.cedula_pk IS NOT NULL THEN 'Fundador'
+                        ELSE 'Regular'
+                    END AS tipo_asociado,
+                    a.Estado,
+                    ag.Nombre AS nombre_agencia
+                FROM ASOCIADO a
+                INNER JOIN CUENTA_AHORRO ca ON a.cedula_pk = ca.cedula_asociado_fk
+                INNER JOIN AGENCIA ag ON ca.CodigoAgencia_fk = ag.Codigo_pk
+                LEFT JOIN ASOCIADO_FUND f ON a.cedula_pk = f.cedula_pk
+                WHERE ag.Codigo_pk = %s
+                ORDER BY a.Apellidos, a.Nombres
+            """
+            cur.execute(query, (codigo_agencia_admin,))
+            
+            # normalizamos los nombres de las columnas a minusculas para evitar colisiones
+            col_names = [desc[0].lower() for desc in cur.description]
+            rows = cur.fetchall()
+            
+            for row in rows:
+                asociados.append(dict(zip(col_names, row)))
+
+    except Exception as e:
+        print(f"error en el mapeo de datos de la agencia: {str(e)}")
+    finally:
+        if cur: cur.close()
+        if conn: conn.close()
+
+    return render_template('admin/gestion_asociados.html', asociados=asociados)
 
 @admin_bp.route('/admin/asociados/registrar-asociado', methods=['GET', 'POST'])
 def registrar_asociado():
