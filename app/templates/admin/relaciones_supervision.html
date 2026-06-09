@@ -98,12 +98,12 @@
     }
 
     .eliminar {
-        background: #007acc;
+        background: #cc0000;
         color: white;
     }
 
     .consultar {
-        background: #007acc;
+        background: #005f99;
         color: white;
     }
 
@@ -144,39 +144,67 @@
 
     <h2>Administración de Relaciones de Supervisión</h2>
 
-    <div class="form-grid">
+    <form method="POST">
 
-        <div class="campo">
-            <label>Empleado Subordinado</label>
-            <select name="empleado_subordinado">
-                <option value="">Seleccione un empleado</option>
-            </select>
+        <div class="form-grid">
+
+            <div class="campo">
+                <label>Empleado Subordinado</label>
+                <select name="empleado_subordinado">
+                    <option value="">Seleccione un empleado</option>
+                    {% for e in empleados %}
+                    <option value="{{ e.cedula }}">
+                        {{ e.nombre }} - {{ e.cargo }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="campo">
+                <label>Empleado Supervisor</label>
+                <select name="empleado_supervisor">
+                    <option value="">Seleccione un supervisor</option>
+                    {% for e in empleados %}
+                    <option value="{{ e.cedula }}">
+                        {{ e.nombre }} - {{ e.cargo }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
         </div>
 
         <div class="campo">
-            <label>Empleado Supervisor</label>
-            <select name="empleado_supervisor">
-                <option value="">Seleccione un supervisor</option>
-            </select>
+      <label>Relación a eliminar</label>
+
+    <select name="relacion">
+        <option value="">Seleccione una relación</option>
+
+        {% for r in relaciones %}
+        <option value="{{ r.cedula_supervisor }}|{{ r.cedula_subordinado }}">
+            {{ r.supervisor }} → {{ r.subordinado }}
+         </option>
+         {% endfor %}
+       </select>
+   </div>
+
+        <div class="botones">
+
+            <button type="submit" name="accion" value="asignar" class="btn asignar">
+                Asignar Supervisor
+            </button>
+
+            <button type="submit" name="accion" value="eliminar" class="btn eliminar">
+                Eliminar Relación
+            </button>
+
+            <button type="submit" name="accion" value="consultar" class="btn consultar">
+                Consultar Jerarquía
+            </button>
+
         </div>
 
-    </div>
-
-    <div class="botones">
-
-        <button class="btn asignar">
-            Asignar Supervisor
-        </button>
-
-        <button class="btn eliminar">
-            Eliminar Relación Supervisor
-        </button>
-
-        <button class="btn consultar">
-            Consultar Jerarquía
-        </button>
-
-    </div>
+    </form>
 
     <table>
         <thead>
@@ -189,14 +217,26 @@
         </thead>
 
         <tbody>
-            <tr>
-                <td colspan="4">
-                    No hay relaciones de supervisión registradas
-                </td>
-            </tr>
+
+            {% if relaciones %}
+                {% for r in relaciones %}
+                <tr>
+                    <td>{{ r.supervisor }}</td>
+                    <td>{{ r.cargo_supervisor }}</td>
+                    <td>{{ r.subordinado }}</td>
+                    <td>{{ r.cargo_subordinado }}</td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="4">No hay relaciones de supervisión registradas</td>
+                </tr>
+            {% endif %}
+
         </tbody>
     </table>
 
 </div>
 
 {% endblock %}
+

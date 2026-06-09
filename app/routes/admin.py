@@ -1581,8 +1581,109 @@ def codeudoria_activa():
 
 # SUPERVISION
 
-@admin_bp.route('/admin/relaciones-supervision')
+@admin_bp.route('/admin/relaciones-supervision', methods=['GET', 'POST'])
 def relaciones_supervision():
     if session.get('perfil') != 'admin':
         return redirect(url_for('auth.login'))
-    return render_template('admin/relaciones_supervision.html')
+    
+    conn = get_conexion()
+    cur = conn.cursor()
+
+    if request.method == 'POST':
+        accion = request.form['accion']
+        supervisor = request.form['empleado_supervisor']#Captura lo que se selecciono en la pagina
+        subordinado = request.form['empleado_subordinado']
+         
+        if accion == 'asignar':
+                #Si supervisor y subordinado no es vacio y que ambos no sean iguales es decir no sean la misma persona
+            if supervisor and subordinado and supervisor != subordinado:
+
+                cur.execute("""
+                INSERT INTO SUPERVISA
+                (
+                CedulaSupervisor_fk,
+                CedulaSubordinado_fk
+            )
+            VALUES (%s,%s)
+            ON CONFLICT
+            (CedulaSupervisor_fk, CedulaSubordinado_fk)
+            DO NOTHING
+            """, (supervisor, subordinado))
+
+                conn.commit()
+
+        elif accion == 'eliminar':
+           
+            cur.execute("""
+        DELETE FROM SUPERVISA
+        WHERE CedulaSupervisor_fk = %s
+          AND CedulaSubordinado_fk = %s
+        """, (supervisor, subordinado))
+
+            conn.commit()
+
+    #Consulta que muestra los empleados asociados a su cargo en especifico
+    cur.execute("""
+    SELECT E.Cedula_pk,
+    E.Nombres,
+    E.Apellidos,
+    C.Nombre
+    FROM EMPLEADO E
+    INNER JOIN CARGO C
+    ON E.cod_cargo_fk = C.cod_cargo_pk
+    ORDER BY E.Nombres
+    """)
+
+    empleados = [
+        {
+            'cedula': e[0],
+            'nombre': f"{e[1]} {e[2]}",
+            'cargo': e[3]
+        }
+        for e in cur.fetchall()
+    ]
+
+    #Consulta de relaciones de supervicion
+    cur.execute("""
+    SELECT
+
+        E1.Nombres,
+        C1.Nombre,
+
+        E2.Nombres,
+        C2.Nombre
+
+    FROM SUPERVISA S
+
+    INNER JOIN EMPLEADO E1
+        ON S.CedulaSupervisor_fk = E1.Cedula_pk
+
+    INNER JOIN CARGO C1
+        ON E1.cod_cargo_fk = C1.cod_cargo_pk
+
+    INNER JOIN EMPLEADO E2
+        ON S.CedulaSubordinado_fk = E2.Cedula_pk
+
+    INNER JOIN CARGO C2
+        ON E2.cod_cargo_fk = C2.cod_cargo_pk
+
+    ORDER BY E1.Nombres
+
+    """)
+
+    relaciones = [
+        {
+            'supervisor': r[0],
+            'cargo_supervisor': r[1],
+            'subordinado': r[2],
+            'cargo_subordinado': r[3]
+        }
+        for r in cur.fetchall()
+    ]
+
+    
+    cur.close()
+    conn.close()
+
+    return render_template('admin/relaciones_supervision.html',
+                           empleados=empleados,relaciones=relaciones)
