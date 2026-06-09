@@ -162,11 +162,20 @@
         </thead>
 
         <tbody>
-            <tr>
-                <td colspan="6">
-                    No hay registros para mostrar
-                </td>
-            </tr>
+            {% if empleados %}
+                {% for e in empleados %}
+                <tr>
+                    <td>{{ e.cedula_pk }}</td>
+                    <td>{{ e.nombres }}</td>
+                    <td>{{ e.apellidos }}</td>
+                    <td>{{ e.cargo }}</td>
+                    <td>{{ e.correo_corp }}</td>
+                    <td>{{ e.estado_laboral }}</td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr><td colspan="6">No hay registros para mostrar</td></tr>
+            {% endif %}
         </tbody>
     </table>
 

@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+{% block contenido %}
+
+<style>
+    body {
+        background: #f4f7fb;
+        font-family: sans-serif;
+    }
+
+    .header {
+        background: linear-gradient(90deg, #004c99, #007acc);
+        color: white;
+        padding: 20px;
+        text-align: center;
+        font-size: 22px;
+        font-weight: bold;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+
+    .logout { position: absolute; top: 20px; right: 30px; color: white; text-decoration: none; font-size: 14px; }
+    .back { position: absolute; top: 20px; left: 30px; color: white; text-decoration: none; font-size: 14px; }
+
+    .container {
+        width: 95%;
+        max-width: 700px;
+        margin: 30px auto;
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        border: 3px solid #004c99;
+        box-sizing: border-box;
+    }
+
+    h2 {
+        color: #004c99;
+        margin-top: 0;
+        margin-bottom: 25px;
+        text-align: center;
+    }
+
+    .campo-bloque {
+        width: 100%;
+        margin-bottom: 18px;
+        box-sizing: border-box;
+    }
+
+    .campo-bloque label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 8px;
+        color: #004c99;
+    }
+
+    .campo-bloque input {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #007acc;
+        border-radius: 8px;
+        box-sizing: border-box;
+        font-size: 15px;
+        background: white;
+    }
+
+    .btn {
+        width: 100%;
+        padding: 13px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 16px;
+        background: #007acc;
+        color: white;
+        transition: all 0.2s ease;
+    }
+
+    .btn:hover {
+        background: #004c99;
+    }
+
+    /* estilos para la ficha de resultados corporativos */
+    .ficha-resultado {
+        margin-top: 30px;
+        background: #f8fafc;
+        border: 2px solid #004c99;
+        border-radius: 10px;
+        padding: 20px;
+    }
+
+    .ficha-resultado h3 {
+        margin-top: 0;
+        color: #004c99;
+        border-bottom: 2px solid #007acc;
+        padding-bottom: 8px;
+    }
+
+    .dato-linea {
+        margin-bottom: 12px;
+        font-size: 15px;
+    }
+
+    .dato-linea strong {
+        color: #004c99;
+        display: inline-block;
+        width: 180px;
+    }
+
+    .badge {
+        padding: 4px 10px;
+        border-radius: 15px;
+        font-weight: bold;
+        font-size: 13px;
+        color: white;
+    }
+    .badge-activo { background: #28a745; }
+    .badge-suspendido { background: #ffc107; color: #333; }
+    .badge-retirado { background: #dc3545; }
+    .badge-fundador { background: #6f42c1; }
+
+    .seccion-acciones {
+        display: flex;
+        gap: 15px;
+        margin-top: 25px;
+    }
+
+    .btn-accion {
+        flex: 1;
+        padding: 12px;
+        text-align: center;
+        text-decoration: none;
+        color: white;
+        font-weight: bold;
+        border-radius: 8px;
+        font-size: 14px;
+    }
+    .btn-modificar { background: #e67e22; }
+    .btn-modificar:hover { background: #d35400; }
+    .btn-estado { background: #2c3e50; }
+    .btn-estado:hover { background: #1a252f; }
+
+    .alert {
+        padding: 12px;
+        border-radius: 8px;
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 20px;
+        background: #ffe6e6;
+        color: #cc0000;
+        border: 1px solid #cc0000;
+    }
+</style>
+
+<div class="header">
+    Modulo de Asociados Coovalluna
+    <a href="/admin/gestion-asociados" class="back">← Volver al Panel</a>
+    <a href="/logout" class="logout">Cerrar sesión</a>
+</div>
+
+<div class="container">
+    <h2>Consultar Archivo de Asociados</h2>
+
+    {% if error %}
+        <div class="alert">⚠️ {{ error }}</div>
+    {% endif %}
+
+    <form method="POST" action="/admin/asociados/buscar-asociado">
+        <div class="campo-bloque">
+            <label for="cedula">Ingrese Documento de Identidad (Cédula)</label>
+            <input type="text" id="cedula" name="cedula" placeholder="Ej: 2000001" required>
+        </div>
+        <button type="submit" class="btn">Buscar Registro</button>
+    </form>
+
+    {% if asociado %}
+        <div class="ficha-resultado">
+            <h3>Resultados de la Consulta</h3>
+            
+            <div class="dato-linea">
+                <strong>Tipo de Miembro:</strong>
+                {% if asociado.num_acta_fundacional %}
+                    <span class="badge badge-fundador">Asociado Fundador</span>
+                {% else %}
+                    <span class="badge" style="background: #007acc;">Asociado Regular</span>
+                {% endif %}
+            </div>
+
+            <div class="dato-linea"><strong>Cédula:</strong> {{ asociado.cedula_pk }}</div>
+            <div class="dato-linea"><strong>Nombres Completos:</strong> {{ asociado.nombres }} {{ asociado.apellidos }}</div>
+            <div class="dato-linea"><strong>Fecha de Nacimiento:</strong> {{ asociado.fecha_na }}</div>
+            <div class="dato-linea"><strong>Teléfono de Contacto:</strong> {{ asociado.telefono }}</div>
+            <div class="dato-linea"><strong>Municipio:</strong> {{ asociado.municipio or 'No registrado' }}</div>
+            <div class="dato-linea"><strong>Correo Electrónico:</strong> {{ asociado.correo or 'No registrado' }}</div>
+            <div class="dato-linea"><strong>Dirección:</strong> {{ asociado.direccion or 'No registrado' }}</div>
+            <div class="dato-linea"><strong>Fecha de Afiliación:</strong> {{ asociado.fech_afil }}</div>
+            
+            <div class="dato-linea">
+                <strong>Estado de Operación:</strong>
+                {% if asociado.estado == 'activo' %}
+                    <span class="badge badge-activo">Activo</span>
+                {% elif asociado.estado == 'suspendido' %}
+                    <span class="badge badge-suspendido">Suspendido</span>
+                {% else %}
+                    <span class="badge badge-retirado">Retirado</span>
+                {% endif %}
+            </div>
+
+            {% if asociado.num_acta_fundacional %}
+                <div style="background: #f0f4f8; border: 1px dashed #6f42c1; padding: 15px; border-radius: 8px; margin-top: 15px;">
+                    <h4 style="color: #6f42c1; margin-top: 0; margin-bottom: 10px;">Detalles de Fundador</h4>
+                    <div class="dato-linea"><strong>Número de Acta:</strong> {{ asociado.num_acta_fundacional }}</div>
+                    <div class="dato-linea"><strong>Año Reconocimiento:</strong> {{ asociado.ano_reconocimiento or 'No asignado' }}</div>
+                    <div class="dato-linea"><strong>Beneficios Asignados:</strong> {{ asociado.descripcion_beneficios or 'Ninguno' }}</div>
+                </div>
+            {% endif %}
+
+            <div class="seccion-acciones">
+                <a href="/admin/asociados/modificar-asociado?cedula={{ asociado.cedula_pk }}" class="btn-accion btn-modificar">✏️ Modificar Datos</a>
+                <a href="/admin/asociados/cambiar-estado-asociado?cedula={{ asociado.cedula_pk }}" class="btn-accion btn-estado">🔄 Cambiar Estado</a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}
