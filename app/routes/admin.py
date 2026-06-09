@@ -360,13 +360,25 @@ def modificar_agencia():
         if conn:
             conn.close()
 
-
-#GESTION - CRUD USUARIOS
-@admin_bp.route('/admin/gestion-usuarios')
-def gestion_usuarios():
+#GESTION - CRUD EMPLEADOS
+@admin_bp.route('/admin/gestion-empleados')
+def gestion_empleados():
     if session.get('perfil') != 'admin':
         return redirect(url_for('auth.login'))
-    return render_template('admin/gestion_usuarios.html')
+    
+    conn = get_conexion()
+    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur.execute("""
+        SELECT e.Cedula_pk, e.Nombres, e.Apellidos, 
+               c.Nombre AS cargo, e.Correo_corp, e.Estado_Laboral
+        FROM EMPLEADO e
+        JOIN CARGO c ON c.cod_cargo_pk = e.cod_cargo_fk
+        ORDER BY e.Apellidos
+    """)
+    empleados = cur.fetchall()
+    cur.close()
+    conn.close()
+    return render_template('admin/gestion_empleados.html', empleados=empleados)
 
 @admin_bp.route('/admin/empleados/buscar-empleado', methods=['GET'])
 def buscar_empleado():
@@ -903,6 +915,329 @@ def gestion_asociados():
     if session.get('perfil') != 'admin':
         return redirect(url_for('auth.login'))
     return render_template('admin/gestion_asociados.html')
+
+@admin_bp.route('/admin/asociados/registrar-asociado', methods=['GET', 'POST'])
+def registrar_asociado():
+    if session.get('perfil') != 'admin':
+        return redirect(url_for('auth.login'))
+
+    if request.method == 'POST':
+        # recopilacion de datos basicos obligatorios del formulario
+        cedula = request.form.get('cedula', '').strip()
+        nombres = request.form.get('nombres', '').strip()
+        apellidos = request.form.get('apellidos', '').strip()
+        fecha_na = request.form.get('fecha_na', '').strip()
+        telefono = request.form.get('telefono', '').strip()
+        estado = request.form.get('estado', 'activo')
+        municipio = request.form.get('municipio', '').strip()
+        correo = request.form.get('correo', '').strip()
+        direccion = request.form.get('direccion', '').strip()
+        password_asoc = request.form.get('password', '1234').strip()
+
+        # datos extendidos en caso de ser fundador
+        es_fundador = request.form.get('es_fundador') == 'si'
+        num_acta = request.form.get('num_acta_fundacional', '').strip()
+        ano_reconocimiento = request.form.get('ano_reconocimiento', '').strip()
+        descripcion_beneficios = request.form.get('descripcion_beneficios', '').strip()
+
+        conn = None
+        cur = None
+
+        try:
+            conn = get_conexion()
+            cur = conn.cursor()
+
+            # verificamos primero si la cedula ya se encuentra registrada
+            cur.execute("SELECT cedula_pk FROM ASOCIADO WHERE cedula_pk = %s", (cedula,))
+            if cur.fetchone():
+                return render_template(
+                    'admin/asociados/registrar_asociado.html',
+                    error=f"la cedula {cedula} ya esta registrada en el sistema.",
+                    datos=request.form
+                )
+
+            # insercion del registro base en la tabla asociado
+            query_asociado = """
+                INSERT INTO ASOCIADO (
+                    cedula_pk, Nombres, Apellidos, Fecha_na, Telefono, 
+                    Estado, Fech_afil, Municipio, correo, Direccion, password
+                ) VALUES (%s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP, %s, %s, %s, %s)
+            """
+            cur.execute(query_asociado, (
+                cedula, nombres, apellidos, fecha_na, telefono, 
+                estado, municipio, correo, direccion, password_asoc
+            ))
+
+            # si se marco la casilla de fundador, procedemos con la tabla dependiente
+            if es_fundador:
+                if not num_acta:
+                    raise Exception("el numero de acta es obligatorio para asociados fundadores")
+                
+                ano_rec_int = int(ano_reconocimiento) if ano_reconocimiento else None
+
+                query_fundador = """
+                    INSERT INTO ASOCIADO_FUND (
+                        cedula_pk, Num_acta_fundacional, Ano_reconocimiento, 
+                        Descripcion_beneficios, Fecha_firma
+                    ) VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP)
+                """
+                cur.execute(query_fundador, (
+                    cedula, num_acta, ano_rec_int, descripcion_beneficios
+                ))
+
+            # confirmamos la transaccion completa en la base de datos
+            conn.commit()
+            return render_template(
+                'admin/asociados/registrar_asociado.html',
+                success="asociado registrado correctamente en el sistema corporativo."
+            )
+
+        except Exception as e:
+            if conn:
+                conn.rollback()
+            print(f"error al registrar asociado: {str(e)}")
+            return render_template(
+                'admin/asociados/registrar_asociado.html',
+                error=f"error en el motor al guardar: {str(e)}",
+                datos=request.form
+            )
+        finally:
+            if cur: cur.close()
+            if conn: conn.close()
+
+    return render_template('admin/asociados/registrar_asociado.html', success="asociado registrado correctamente en el sistema corporativo.",
+                datos={})
+
+@admin_bp.route('/admin/asociados/modificar-asociado', methods=['GET', 'POST'])
+def modificar_asociado():
+    if session.get('perfil') != 'admin':
+        return redirect(url_for('auth.login'))
+
+    # puede llegar por parametro get desde otra pantalla o por el formulario
+    cedula = request.args.get('cedula') or request.form.get('cedula_buscada', '').strip() or request.form.get('cedula', '').strip()
+    asociado = None
+    error = None
+    success = None
+
+    conn = None
+    cur = None
+
+    # 1. si hay una cedula en la peticion intentamos cargar sus datos actuales
+    if cedula:
+        try:
+            conn = get_conexion()
+            cur = conn.cursor()
+            
+            query = """
+                SELECT a.cedula_pk, a.Nombres, a.Apellidos, a.Fecha_na, a.Telefono, 
+                       a.Estado, a.Municipio, a.correo, a.Direccion, a.password,
+                       f.Num_acta_fundacional, f.Ano_reconocimiento, f.Descripcion_beneficios
+                FROM ASOCIADO a
+                LEFT JOIN ASOCIADO_FUND f ON a.cedula_pk = f.cedula_pk
+                WHERE a.cedula_pk = %s
+            """
+            cur.execute(query, (cedula,))
+            col_names = [desc[0] for desc in cur.description]
+            row = cur.fetchone()
+            if row:
+                asociado = dict(zip(col_names, row))
+            else:
+                error = f"no se encontro ningun asociado con la cedula: {cedula}"
+        except Exception as e:
+            error = f"error al cargar los registros: {str(e)}"
+        finally:
+            if cur: cur.close()
+            if conn: conn.close()
+
+    # 2. si la accion es guardar los cambios modificados (detectamos el campo nombres)
+    if request.method == 'POST' and asociado and 'nombres' in request.form:
+        nombres = request.form.get('nombres', '').strip()
+        apellidos = request.form.get('apellidos', '').strip()
+        fecha_na = request.form.get('fecha_na', '').strip()
+        telefono = request.form.get('telefono', '').strip()
+        municipio = request.form.get('municipio', '').strip()
+        correo = request.form.get('correo', '').strip()
+        direccion = request.form.get('direccion', '').strip()
+        password_asoc = request.form.get('password', '').strip()
+        
+        es_fundador = request.form.get('es_fundador') == 'si'
+        num_acta = request.form.get('num_acta_fundacional', '').strip()
+        ano_reconocimiento = request.form.get('ano_reconocimiento', '').strip()
+        descripcion_beneficios = request.form.get('descripcion_beneficios', '').strip()
+
+        try:
+            conn = get_conexion()
+            cur = conn.cursor()
+
+            # actualizacion en la tabla principal asociado
+            query_update_base = """
+                UPDATE ASOCIADO 
+                SET Nombres=%s, Apellidos=%s, Fecha_na=%s, Telefono=%s, 
+                    Municipio=%s, correo=%s, Direccion=%s, password=%s
+                WHERE cedula_pk=%s
+            """
+            cur.execute(query_update_base, (
+                nombres, apellidos, fecha_na, telefono, 
+                municipio, correo, direccion, password_asoc, cedula
+            ))
+
+            # validacion de su estado en la tabla dependiente de fundadores
+            cur.execute("SELECT cedula_pk FROM ASOCIADO_FUND WHERE cedula_pk = %s", (cedula,))
+            ya_era_fundador = cur.fetchone() is not None
+
+            if es_fundador:
+                ano_rec_int = int(ano_reconocimiento) if ano_reconocimiento else None
+                if ya_era_fundador:
+                    query_up_fund = """
+                        UPDATE ASOCIADO_FUND 
+                        SET Num_acta_fundacional=%s, Ano_reconocimiento=%s, Descripcion_beneficios=%s
+                        WHERE cedula_pk=%s
+                    """
+                    cur.execute(query_up_fund, (num_acta, ano_rec_int, descripcion_beneficios, cedula))
+                else:
+                    query_ins_fund = """
+                        INSERT INTO ASOCIADO_FUND (cedula_pk, Num_acta_fundacional, Ano_reconocimiento, Descripcion_beneficios, Fecha_firma)
+                        VALUES (%s, %s, %s, %s, CURRENT_TIMESTAMP)
+                    """
+                    cur.execute(query_ins_fund, (cedula, num_acta, ano_rec_int, descripcion_beneficios))
+            else:
+                if ya_era_fundador:
+                    cur.execute("DELETE FROM ASOCIADO_FUND WHERE cedula_pk = %s", (cedula,))
+
+            conn.commit()
+            success = "los datos del asociado fueron guardados y actualizados correctamente."
+            
+            # sincronizamos el diccionario para reflejar los nuevos cambios de inmediato
+            asociado.update({
+                'nombres': nombres, 'apellidos': apellidos, 'fecha_na': fecha_na, 'telefono': telefono,
+                'municipio': municipio, 'correo': correo, 'direccion': direccion, 'password': password_asoc,
+                'num_acta_fundacional': num_acta if es_fundador else None,
+                'ano_reconocimiento': ano_reconocimiento if es_fundador else None,
+                'descripcion_beneficios': descripcion_beneficios if es_fundador else None
+            })
+
+        except Exception as e:
+            if conn: conn.rollback()
+            error = f"error en el motor al guardar: {str(e)}"
+        finally:
+            if cur: cur.close()
+            if conn: conn.close()
+
+    return render_template('admin/asociados/modificar_asociado.html', asociado=asociado, error=error, success=success, cedula_buscada=cedula)
+
+@admin_bp.route('/admin/asociados/cambiar-estado-asociado', methods=['GET', 'POST'])
+def cambiar_estado_asociado():
+    if session.get('perfil') != 'admin':
+        return redirect(url_for('auth.login'))
+
+    # lectura de la cedula por cualquier metodo de transferencia de datos
+    cedula = request.args.get('cedula') or request.form.get('cedula_buscada', '').strip() or request.form.get('cedula', '').strip()
+    asociado = None
+    error = None
+    success = None
+
+    conn = None
+    cur = None
+
+    # 1. si existe una cedula cargamos la informacion basica de control actual
+    if cedula:
+        try:
+            conn = get_conexion()
+            cur = conn.cursor()
+            
+            query = """
+                SELECT cedula_pk, Nombres, Apellidos, Estado 
+                FROM ASOCIADO 
+                WHERE cedula_pk = %s
+            """
+            cur.execute(query, (cedula,))
+            col_names = [desc[0] for desc in cur.description]
+            row = cur.fetchone()
+            if row:
+                asociado = dict(zip(col_names, row))
+            else:
+                error = f"no se encontro ningun asociado con la cedula: {cedula}"
+        except Exception as e:
+            error = f"error en el motor al consultar: {str(e)}"
+        finally:
+            if cur: cur.close()
+            if conn: conn.close()
+
+    # 2. si se procesa el cambio de estado (detectamos el campo nuevo_estado)
+    if request.method == 'POST' and asociado and 'nuevo_estado' in request.form:
+        nuevo_estado = request.form.get('nuevo_estado', '').strip()
+
+        try:
+            conn = get_conexion()
+            cur = conn.cursor()
+
+            # ejecucion de la actualizacion del estado operacional
+            query_update = "UPDATE ASOCIADO SET Estado = %s WHERE cedula_pk = %s"
+            cur.execute(query_update, (nuevo_estado, cedula))
+            
+            conn.commit()
+            success = f"el estado del asociado se actualizo correctamente a '{nuevo_estado.upper()}'."
+            
+            # actualizamos el diccionario local para mostrar el cambio reflejado
+            asociado['estado'] = nuevo_estado
+
+        except Exception as e:
+            if conn: conn.rollback()
+            error = f"error al guardar el nuevo estado: {str(e)}"
+        finally:
+            if cur: cur.close()
+            if conn: conn.close()
+
+    return render_template('admin/asociados/cambiar_estado_asociado.html', asociado=asociado, error=error, success=success, cedula_buscada=cedula)
+
+@admin_bp.route('/admin/asociados/buscar-asociado', methods=['GET', 'POST'])
+def buscar_asociado():
+    if session.get('perfil') != 'admin':
+        return redirect(url_for('auth.login'))
+
+    asociado = None
+    error = None
+
+    if request.method == 'POST':
+        cedula = request.form.get('cedula', '').strip()
+
+        if not cedula:
+            error = "por favor ingrese un numero de cedula valido para la busqueda."
+        else:
+            conn = None
+            cur = None
+            try:
+                conn = get_conexion()
+                cur = conn.cursor()
+
+                # consulta relacional para traer datos basicos y extendidos si es fundador
+                query = """
+                    SELECT 
+                        a.cedula_pk, a.Nombres, a.Apellidos, a.Fecha_na, a.Telefono, 
+                        a.Estado, a.Fech_afil, a.Municipio, a.correo, a.Direccion,
+                        f.Num_acta_fundacional, f.Ano_reconocimiento, f.Descripcion_beneficios
+                    FROM ASOCIADO a
+                    LEFT JOIN ASOCIADO_FUND f ON a.cedula_pk = f.cedula_pk
+                    WHERE a.cedula_pk = %s
+                """
+                cur.execute(query, (cedula,))
+                col_names = [desc[0] for desc in cur.description]
+                row = cur.fetchone()
+
+                if row:
+                    # mapeamos el resultado a un diccionario comodo para el frontend
+                    asociado = dict(zip(col_names, row))
+                else:
+                    error = f"no se encontro ningun asociado registrado con la cedula: {cedula}"
+
+            except Exception as e:
+                print(f"error en la busqueda de asociado: {str(e)}")
+                error = f"error interno en el motor de base de datos: {str(e)}"
+            finally:
+                if cur: cur.close()
+                if conn: conn.close()
+
+    return render_template('admin/asociados/buscar_asociado.html', asociado=asociado, error=error)
 
 # REPORTES 
 

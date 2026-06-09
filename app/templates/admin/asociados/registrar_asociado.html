@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+{% block contenido %}
+
+<style>
+    body {
+        background: #f4f7fb;
+        font-family: sans-serif;
+    }
+
+    .header {
+        background: linear-gradient(90deg, #004c99, #007acc);
+        color: white;
+        padding: 20px;
+        text-align: center;
+        font-size: 22px;
+        font-weight: bold;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+
+    .logout { position: absolute; top: 20px; right: 30px; color: white; text-decoration: none; font-size: 14px; }
+    .back { position: absolute; top: 20px; left: 30px; color: white; text-decoration: none; font-size: 14px; }
+
+    .container {
+        width: 95%;
+        max-width: 700px;
+        margin: 30px auto;
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        border: 3px solid #004c99;
+        box-sizing: border-box;
+    }
+
+    h2 {
+        color: #004c99;
+        margin-top: 0;
+        margin-bottom: 25px;
+        text-align: center;
+    }
+
+    /* caja de bloques independientes verticales para evitar que se encojan */
+    .campo-bloque {
+        width: 100%;
+        margin-bottom: 18px;
+        box-sizing: border-box;
+    }
+
+    .campo-bloque label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 8px;
+        color: #004c99;
+    }
+
+    .campo-bloque input, .campo-bloque select, .campo-bloque textarea {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #007acc;
+        border-radius: 8px;
+        box-sizing: border-box;
+        font-size: 15px;
+        background: white;
+    }
+
+    .campo-bloque textarea {
+        resize: vertical;
+        height: 80px;
+    }
+
+    /* seccion de fundador usando truco de variable css para evitar alertas en el editor */
+    .seccion-fundador {
+        background: #f0f6fc;
+        border: 2px dashed #007acc;
+        border-radius: 10px;
+        padding: 20px;
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
+
+    .seccion-fundador h3 {
+        margin-top: 0;
+        color: #004c99;
+        font-size: 16px;
+        border-bottom: 1px solid #007acc;
+        padding-bottom: 5px;
+    }
+
+    .botones-grupo {
+        text-align: center;
+        margin-top: 25px;
+    }
+
+    .btn {
+        width: 100%;
+        max-width: 250px;
+        padding: 13px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 16px;
+        background: #007acc;
+        color: white;
+        transition: all 0.2s ease;
+    }
+
+    .btn:hover {
+        background: #004c99;
+        transform: translateY(-2px);
+    }
+
+    .alert {
+        padding: 12px;
+        border-radius: 8px;
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .alert-error { background: #ffe6e6; color: #cc0000; border: 1px solid #cc0000; }
+    .alert-success { background: #e2fbe8; color: #155724; border: 1px solid #155724; }
+</style>
+
+<div class="header">
+    Modulo de Asociados Coovalluna
+    <a href="/admin/gestion-asociados" class="back">← Volver al Panel</a>
+    <a href="/logout" class="logout">Cerrar sesión</a>
+</div>
+
+<div class="container">
+    <h2>Registrar Nuevo Asociado</h2>
+
+    {% if error %}
+        <div class="alert alert-error">⚠️ {{ error }}</div>
+    {% endif %}
+    {% if success %}
+        <div class="alert alert-success">✔️ {{ success }}</div>
+    {% endif %}
+
+    <form method="POST" action="/admin/asociados/registrar-asociado">
+        
+        <div class="campo-bloque">
+            <label for="cedula">Cedula de Ciudadania (*)</label>
+            <input type="text" id="cedula" name="cedula" value="{{ datos.cedula or '' }}" required placeholder="Ej: 2000011">
+        </div>
+
+        <div class="campo-bloque">
+            <label for="nombres">Nombres (*)</label>
+            <input type="text" id="nombres" name="nombres" value="{{ datos.nombres or '' }}" required placeholder="Ingrese nombres completos">
+        </div>
+
+        <div class="campo-bloque">
+            <label for="apellidos">Apellidos (*)</label>
+            <input type="text" id="apellidos" name="apellidos" value="{{ datos.apellidos or '' }}" required placeholder="Ingrese apellidos completos">
+        </div>
+
+        <div class="campo-bloque">
+            <label for="fecha_na">Fecha de Nacimiento (*)</label>
+            <input type="date" id="fecha_na" name="fecha_na" value="{{ datos.fecha_na or '' }}" required>
+        </div>
+
+        <div class="campo-bloque">
+            <label for="telefono">Numero de Telefono (*)</label>
+            <input type="text" id="telefono" name="telefono" value="{{ datos.telefono or '' }}" required placeholder="Ej: 3101234567">
+        </div>
+
+        <div class="campo-bloque">
+            <label for="municipio">Municipio (*)</label>
+            <input type="text" id="municipio" name="municipio" value="{{ datos.municipio or '' }}" required placeholder="Ej: Tuluá">
+        </div>
+
+        <div class="campo-bloque">
+            <label for="correo">Correo Electronico</label>
+            <input type="email" id="correo" name="correo" value="{{ datos.correo or '' }}" placeholder="nombre@ejemplo.com">
+        </div>
+
+        <div class="campo-bloque">
+            <label for="direccion">Direccion de Residencia</label>
+            <input type="text" id="direccion" name="direccion" value="{{ datos.direccion or '' }}" placeholder="Ej: Calle 10 #5-20">
+        </div>
+
+        <div class="campo-bloque">
+            <label for="password">Contraseña de Ingreso</label>
+            <input type="password" id="password" name="password" value="{{ datos.password or '1234' }}" placeholder="Por defecto: 1234">
+        </div>
+
+        <div class="campo-bloque">
+            <label for="estado">Estado Inicial del Asociado</label>
+            <select id="estado" name="estado">
+                <option value="activo" {% if datos.estado == 'activo' %}selected{% endif %}>Activo</option>
+                <option value="suspendido" {% if datos.estado == 'suspendido' %}selected{% endif %}>Suspendido</option>
+                <option value="retirado" {% if datos.estado == 'retirado' %}selected{% endif %}>Retirado</option>
+            </select>
+        </div>
+
+        <div class="campo-bloque">
+            <label for="es_fundador">¿Este asociado es Miembro Fundador?</label>
+            <select id="es_fundador" name="es_fundador" onchange="alternarSeccionFundador(this.value)">
+                <option value="no" {% if datos.es_fundador != 'si' %}selected{% endif %}>No, es Asociado Regular</option>
+                <option value="si" {% if datos.es_fundador == 'si' %}selected{% endif %}>Sí, es Asociado Fundador</option>
+            </select>
+        </div>
+
+        <div id="campos_fundador" class="seccion-fundador">
+            <h3>Informacion de Acta Corporativa</h3>
+            
+            <div class="campo-bloque">
+                <label for="num_acta_fundacional">Numero de Acta Fundacional (*)</label>
+                <input type="text" id="num_acta_fundacional" name="num_acta_fundacional" value="{{ datos.num_acta_fundacional or '' }}" placeholder="Ej: ACTA-003">
+            </div>
+
+            <div class="campo-bloque">
+                <label for="ano_reconocimiento">Año de Reconocimiento</label>
+                <input type="number" id="ano_reconocimiento" name="ano_reconocimiento" value="{{ datos.ano_reconocimiento or '' }}" placeholder="Ej: 1991">
+            </div>
+
+            <div class="campo-bloque">
+                <label for="descripcion_beneficios">Descripcion de Beneficios Especiales</label>
+                <textarea id="descripcion_beneficios" name="descripcion_beneficios" placeholder="Escriba los beneficios especiales...">{{ datos.descripcion_beneficios or '' }}</textarea>
+            </div>
+        </div>
+
+        <div class="botones-grupo">
+            <button type="submit" class="btn">Guardar Registro</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    // maneja de forma dinamica la visualizacion y obligatoriedad en el cliente
+    function alternarSeccionFundador(valor) {
+        const seccion = document.getElementById('campos_fundador');
+        const inputActa = document.getElementById('num_acta_fundacional');
+        
+        if (valor === 'si') {
+            seccion.style.styleProperty = 'display';
+            seccion.style.display = 'block';
+            inputActa.required = true;
+        } else {
+            seccion.style.display = 'none';
+            inputActa.required = false;
+            inputActa.value = '';
+        }
+    }
+    document.addEventListener("DOMContentLoaded", function() {
+        const estadoInicialFundador = "{{ datos.es_fundador or 'no' }}";
+        const seccion = document.getElementById('campos_fundador');
+        const inputActa = document.getElementById('num_acta_fundacional');
+        
+        if (estadoInicialFundador === 'si') {
+            seccion.style.display = 'block';
+            if (inputActa) inputActa.required = true;
+        } else {
+            seccion.style.display = 'none';
+            if (inputActa) {
+                inputActa.required = false;
+                inputActa.value = '';
+            }
+        }
+    });
+</script>
+
+{% endblock %}

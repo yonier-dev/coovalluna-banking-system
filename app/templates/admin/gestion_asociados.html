@@ -108,6 +108,11 @@
         color: white;
     }
 
+    .buscar {
+        background: #007acc;
+        color: white;
+    }
+
     table {
         width: 100%;
         border-collapse: collapse;
@@ -144,73 +149,12 @@
 <div class="container">
 
     <h2>Administración de Asociados</h2>
-
-    <div class="form-grid">
-
-        <div class="campo">
-            <label>Cédula</label>
-            <input type="text" name="cedula">
+        <div class="botones">
+            <a href="/admin/asociados/registrar-asociado" class="btn registrar">Registrar Asociado</a>
+            <a href="/admin/asociados/modificar-asociado" class="btn modificar">Modificar Asociado</a>
+            <a href="/admin/asociados/cambiar-estado-asociado" class="btn estado">Cambiar Estado Del Asociado</a>
+            <a href="/admin/asociados/buscar-asociado" class="btn buscar"> Buscar Asociado</a>
         </div>
-
-        <div class="campo">
-            <label>Año Reconocimiento</label>
-            <input type="number" name="anio_reconocimiento">
-        </div>
-
-        <div class="campo">
-            <label>Nombre</label>
-            <input type="text" name="nombre">
-        </div>
-
-        <div class="campo">
-            <label>Número Acta</label>
-            <input type="text" name="numero_acta">
-        </div>
-
-        <div class="campo">
-            <label>Teléfono</label>
-            <input type="text" name="telefono">
-        </div>
-
-        <div class="campo">
-            <label>Beneficios</label>
-            <input type="text" name="beneficios">
-        </div>
-
-        <div class="campo">
-            <label>Tipo Asociado</label>
-            <select name="tipo_asociado">
-                <option value="">Seleccione</option>
-                <option>Asociado Fundador</option>
-                <option>Asociado Genérico</option>
-            </select>
-        </div>
-
-        <div class="campo">
-            <label>Estado Asociado</label>
-            <select name="estado_asociado">
-                <option value="">Seleccione</option>
-                <option>Activo</option>
-                <option>Suspendido</option>
-                <option>Retirado</option>
-            </select>
-        </div>
-
-    </div>
-
-    <div class="botones">
-        <button class="btn registrar">
-            Registrar
-        </button>
-
-        <button class="btn modificar">
-            Modificar
-        </button>
-
-        <button class="btn estado">
-            Cambiar Estado
-        </button>
-    </div>
 
     <table>
         <thead>

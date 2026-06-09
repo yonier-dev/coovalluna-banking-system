@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+{% block contenido %}
+
+<style>
+    body {
+        background: #f4f7fb;
+        font-family: sans-serif;
+    }
+
+    .header {
+        background: linear-gradient(90deg, #004c99, #007acc);
+        color: white;
+        padding: 20px;
+        text-align: center;
+        font-size: 22px;
+        font-weight: bold;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+
+    .logout { position: absolute; top: 20px; right: 30px; color: white; text-decoration: none; font-size: 14px; }
+    .back { position: absolute; top: 20px; left: 30px; color: white; text-decoration: none; font-size: 14px; }
+
+    .container {
+        width: 95%;
+        max-width: 700px;
+        margin: 30px auto;
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        border: 3px solid #004c99;
+        box-sizing: border-box;
+    }
+
+    h2 {
+        color: #004c99;
+        margin-top: 0;
+        margin-bottom: 25px;
+        text-align: center;
+    }
+
+    .seccion-busqueda {
+        background: #fdfbf7;
+        border: 2px solid #ced4da;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 25px;
+    }
+
+    .campo-bloque {
+        width: 100%;
+        margin-bottom: 18px;
+        box-sizing: border-box;
+    }
+
+    .campo-bloque label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 8px;
+        color: #004c99;
+    }
+
+    .campo-bloque input, .campo-bloque select, .campo-bloque textarea {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #007acc;
+        border-radius: 8px;
+        box-sizing: border-box;
+        font-size: 15px;
+        background: white;
+    }
+
+    .campo-bloque textarea {
+        resize: vertical;
+        height: 80px;
+    }
+
+    .seccion-fundador {
+        background: #fdf5ee;
+        border: 2px dashed #e67e22;
+        border-radius: 10px;
+        padding: 20px;
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
+
+    .botones-grupo {
+        text-align: center;
+        margin-top: 25px;
+    }
+
+    .btn {
+        width: 100%;
+        max-width: 250px;
+        padding: 13px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 16px;
+        background: #007acc;
+        color: white;
+        transition: all 0.2s ease;
+    }
+
+    .btn:hover {
+        background: #004c99;
+        transform: translateY(-2px);
+    }
+
+    .btn-buscar {
+        background: #007acc;
+        margin-top: 5px;
+    }
+    .btn-buscar:hover {
+        background: #004c99;
+    }
+
+    .alert {
+        padding: 12px;
+        border-radius: 8px;
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .alert-error { background: #ffe6e6; color: #cc0000; border: 1px solid #cc0000; }
+    .alert-success { background: #e2fbe8; color: #155724; border: 1px solid #155724; }
+</style>
+
+<div class="header">
+    Modulo de Asociados Coovalluna
+    <a href="/admin/gestion-asociados" class="back">← Volver al Panel</a>
+    <a href="/logout" class="logout">Cerrar sesión</a>
+</div>
+
+<div class="container">
+    <h2>Modificar Ficha de Asociado</h2>
+
+    {% if error %}
+        <div class="alert alert-error">⚠️ {{ error }}</div>
+    {% endif %}
+    {% if success %}
+        <div class="alert alert-success">✔️ {{ success }}</div>
+    {% endif %}
+
+    <div class="seccion-busqueda">
+        <form method="POST" action="/admin/asociados/modificar-asociado">
+            <div class="campo-bloque">
+                <label for="cedula_buscada">Buscar Asociado por Cedula</label>
+                <input type="text" id="cedula_buscada" name="cedula_buscada" value="{{ cedula_buscada or '' }}" placeholder="Ingrese la cedula a modificar..." required>
+            </div>
+            <button type="submit" class="btn btn-buscar">Buscar Ficha</button>
+        </form>
+    </div>
+
+    {% if asociado %}
+    <form method="POST" action="/admin/asociados/modificar-asociado">
+        
+        <input type="hidden" name="cedula" value="{{ asociado.cedula_pk }}">
+        
+        <div class="campo-bloque">
+            <label>Cedula del Asociado Seleccionado</label>
+            <input type="text" value="{{ asociado.cedula_pk }}" readonly style="background: #e9ecef; border-color: #ced4da; color: #495057;">
+        </div>
+
+        <div class="campo-bloque">
+            <label for="nombres">Nombres (*)</label>
+            <input type="text" id="nombres" name="nombres" value="{{ asociado.nombres }}" required>
+        </div>
+
+        <div class="campo-bloque">
+            <label for="apellidos">Apellidos (*)</label>
+            <input type="text" id="apellidos" name="apellidos" value="{{ asociado.apellidos }}" required>
+        </div>
+
+        <div class="campo-bloque">
+            <label for="fecha_na">Fecha de Nacimiento (*)</label>
+            <input type="date" id="fecha_na" name="fecha_na" value="{{ asociado.fecha_na }}" required>
+        </div>
+
+        <div class="campo-bloque">
+            <label for="telefono">Numero de Telefono (*)</label>
+            <input type="text" id="telefono" name="telefono" value="{{ asociado.telefono }}" required>
+        </div>
+
+        <div class="campo-bloque">
+            <label for="municipio">Municipio (*)</label>
+            <input type="text" id="municipio" name="municipio" value="{{ asociado.municipio or '' }}" required>
+        </div>
+
+        <div class="campo-bloque">
+            <label for="correo">Correo Electronico</label>
+            <input type="email" id="correo" name="correo" value="{{ asociado.correo or '' }}">
+        </div>
+
+        <div class="campo-bloque">
+            <label for="direccion">Direccion de Residencia</label>
+            <input type="text" id="direccion" name="direccion" value="{{ asociado.direccion or '' }}">
+        </div>
+
+        <div class="campo-bloque">
+            <label for="password">Contraseña de Acceso</label>
+            <input type="text" id="password" name="password" value="{{ asociado.password }}">
+        </div>
+
+        <div class="campo-bloque">
+            <label for="es_fundador">Tipo de Miembro Coovalluna</label>
+            <select id="es_fundador" name="es_fundador" onchange="alternarSeccionFundador(this.value)">
+                <option value="no" {% if not asociado.num_acta_fundacional %}selected{% endif %}>Asociado Regular</option>
+                <option value="si" {% if asociado.num_acta_fundacional %}selected{% endif %}>Asociado Fundador</option>
+            </select>
+        </div>
+
+        <div id="campos_fundador" class="seccion-fundador">
+            <h3 style="color: #004c99; margin-top: 0; font-size: 16px;">Campos Extendidos de Fundador</h3>
+            
+            <div class="campo-bloque">
+                <label for="num_acta_fundacional">Numero de Acta Fundacional (*)</label>
+                <input type="text" id="num_acta_fundacional" name="num_acta_fundacional" value="{{ asociado.num_acta_fundacional or '' }}">
+            </div>
+
+            <div class="campo-bloque">
+                <label for="ano_reconocimiento">Año de Reconocimiento</label>
+                <input type="number" id="ano_reconocimiento" name="ano_reconocimiento" value="{{ asociado.ano_reconocimiento or '' }}">
+            </div>
+
+            <div class="campo-bloque">
+                <label for="descripcion_beneficios">Descripcion de Beneficios Especiales</label>
+                <textarea id="descripcion_beneficios" name="descripcion_beneficios">{{ asociado.descripcion_beneficios or '' }}</textarea>
+            </div>
+        </div>
+
+        <div class="botones-grupo">
+            <button type="submit" class="btn">Guardar Cambios</button>
+        </div>
+    </form>
+    {% else %}
+        <p style="text-align: center; color: #777; margin-top: 30px;">Por favor, busque una cedula arriba para desplegar y editar la ficha del asociado.</p>
+    {% endif %}
+</div>
+
+<script>
+    // control de visualizacion dinamica inicial manejada por el cliente
+    document.addEventListener("DOMContentLoaded", function() {
+        const esFundadorInicial = "{% if asociado and asociado.num_acta_fundacional %}si{% else %}no{% endif %}";
+        alternarSeccionFundador(esFundadorInicial);
+    });
+
+    function alternarSeccionFundador(valor) {
+        const seccion = document.getElementById('campos_fundador');
+        const inputActa = document.getElementById('num_acta_fundacional');
+        
+        if (!seccion) return;
+
+        if (valor === 'si') {
+            seccion.style.display = 'block';
+            if (inputActa) inputActa.required = true;
+        } else {
+            seccion.style.display = 'none';
+            if (inputActa) {
+                inputActa.required = false;
+            }
+        }
+    }
+</script>
+
+{% endblock %}
